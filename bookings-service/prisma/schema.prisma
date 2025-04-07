@@ -37,6 +37,8 @@ enum Status {
   ACTIVE
   EXPIRED
   PENDING
+  COMPLETED
+  PAST
 }
 
 model Bookings {
