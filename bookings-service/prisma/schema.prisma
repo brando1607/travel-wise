@@ -50,7 +50,7 @@ model Bookings {
   date        DateTime
   cabin       Cabin
   bookingCode String
-  status      Status      @default(ACTIVE)
+  status      Status      @default(PENDING)
   createdAt   DateTime    @default(now())
 
   @@map("bookings")
