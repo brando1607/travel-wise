@@ -36,6 +36,7 @@ enum Cabin {
 enum Status {
   ACTIVE
   EXPIRED
+  PENDING
 }
 
 model Bookings {
