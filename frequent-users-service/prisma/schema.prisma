@@ -15,7 +15,7 @@ datasource db {
 
 model Users {
   id           String   @id @default(uuid())
-  memberNumber Int?
+  memberNumber Int      @unique
   name         String
   lastName     String
   email        String   @unique
