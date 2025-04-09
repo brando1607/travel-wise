@@ -17,7 +17,6 @@ model Users {
   memberNumber Int      @id
   name         String
   lastName     String
-  email        String   @unique
   dateOfBirth  DateTime //date input in front end
   country      String //from drop down list in front end
   bookings     String[]
