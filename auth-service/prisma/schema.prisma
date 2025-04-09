@@ -17,7 +17,6 @@ model Passwords {
   memberNumber Int    @id
   password     String //encrypted
   tempPassword String
-  email        String @unique
 
   @@map("passwords")
 }
