@@ -1,9 +1,9 @@
 import { Controller } from '@nestjs/common';
 import { FrequentUsersService } from './frequent.users.service';
 import { MessagePattern } from '@nestjs/microservices';
-import { User, PartialUser } from './types';
+import { User, UpdatedUser } from './types';
 
-@Controller('frequent.users')
+@Controller('frequent-users')
 export class FrequentUsersController {
   constructor(private readonly frequentUsersService: FrequentUsersService) {}
 
@@ -35,7 +35,7 @@ export class FrequentUsersController {
     newData,
   }: {
     memberNumber: number;
-    newdata: PartialUser;
+    newData: UpdatedUser;
   }): Promise<User | string> {
     try {
       const updatedUser = await this.frequentUsersService.updateUser({
