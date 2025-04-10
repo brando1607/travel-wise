@@ -3,21 +3,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { PrismaModule } from './prisma/prisma.module';
 
 @Module({
-  imports: [
-    PrismaModule,
-    ClientsModule.register([
-      {
-        name: 'AUTH-SERVICE',
-        transport: Transport.TCP,
-        options: { host: 'localhost', port: 8800 },
-      },
-      {
-        name: 'BOOKINGS-SERVICE',
-        transport: Transport.TCP,
-        options: { host: 'localhost', port: 8080 },
-      },
-    ]),
-  ],
+  imports: [PrismaModule, ClientsModule.register([])],
   controllers: [],
   providers: [],
 })
