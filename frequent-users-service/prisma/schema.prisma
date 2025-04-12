@@ -22,5 +22,5 @@ model Users {
   country      String //from drop down list in front end
   bookings     String[] @default([])
 
-  @@map("user")
+  @@map("users")
 }
