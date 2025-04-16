@@ -1,7 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { FrequentUsersService } from './frequent.users.service';
 import { MessagePattern } from '@nestjs/microservices';
-import { UpdatedUser, PersonalizedResponse } from './types';
+import { UpdatedUser, PersonalizedResponse, NewUser } from './types';
 
 @Controller('frequent-users')
 export class FrequentUsersController {
@@ -44,6 +44,26 @@ export class FrequentUsersController {
       });
 
       return updatedUser;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @MessagePattern({ cmd: 'createUser' })
+  async createUser({
+    user,
+    email,
+  }: {
+    user: NewUser;
+    email: string;
+  }): Promise<PersonalizedResponse | void> {
+    try {
+      const createUser = await this.frequentUsersService.createUser({
+        user,
+        email,
+      });
+
+      return createUser;
     } catch (error) {
       throw error;
     }
