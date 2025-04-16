@@ -1,7 +1,5 @@
-import crypto from 'crypto';
-import dotenv from 'dotenv';
+import * as crypto from 'crypto';
 import { getEnv } from './getEnv';
-dotenv.config();
 
 const encryptionKey = getEnv('ENCRYPTION_KEY');
 
