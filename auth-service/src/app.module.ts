@@ -7,11 +7,6 @@ import { PrismaModule } from './prisma/prisma.module';
     PrismaModule,
     ClientsModule.register([
       {
-        name: 'BOOKINGS-SERVICE',
-        transport: Transport.TCP,
-        options: { host: 'localhost', port: 8080 },
-      },
-      {
         name: 'FREQUENT-USERS-SERVICE',
         transport: Transport.TCP,
         options: { host: 'localhost', port: 8000 },
