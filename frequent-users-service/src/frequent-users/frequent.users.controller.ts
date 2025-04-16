@@ -1,14 +1,14 @@
 import { Controller } from '@nestjs/common';
 import { FrequentUsersService } from './frequent.users.service';
 import { MessagePattern } from '@nestjs/microservices';
-import { User, UpdatedUser } from './types';
+import { UpdatedUser, PersonalizedResponse } from './types';
 
 @Controller('frequent-users')
 export class FrequentUsersController {
   constructor(private readonly frequentUsersService: FrequentUsersService) {}
 
   @MessagePattern({ cmd: 'getAllUsers' })
-  async getAllUsers(): Promise<User[] | string> {
+  async getAllUsers(): Promise<PersonalizedResponse | void> {
     try {
       const users = await this.frequentUsersService.getAllUsers();
 
@@ -19,13 +19,13 @@ export class FrequentUsersController {
   }
 
   @MessagePattern({ cmd: 'getUser' })
-  async getUser(memberNumber: number): Promise<User | string> {
+  async getUser(memberNumber: number): Promise<PersonalizedResponse | void> {
     try {
       const user = await this.frequentUsersService.getUser(memberNumber);
 
       return user;
     } catch (error) {
-      return error;
+      throw error;
     }
   }
 
@@ -36,7 +36,7 @@ export class FrequentUsersController {
   }: {
     memberNumber: number;
     newData: UpdatedUser;
-  }): Promise<User | string> {
+  }): Promise<PersonalizedResponse | void> {
     try {
       const updatedUser = await this.frequentUsersService.updateUser({
         memberNumber,
