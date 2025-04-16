@@ -1,39 +1,49 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { ClientProxy } from '@nestjs/microservices';
-import { User, UpdatedUser, NewUser } from './types';
+import { UpdatedUser, NewUser, PersonalizedResponse } from './types';
 import { encryption } from 'src/utils/encryptAndDecrypt.function';
+import { errors } from 'src/utils/dictionaries/errors.dictionary';
+import { responses } from 'src/utils/dictionaries/responses.distionary';
+import { CustomError } from 'src/utils/custom.errors';
+import { CustomResponse } from 'src/utils/custom.response';
+import { RpcException } from '@nestjs/microservices';
 
 @Injectable()
 export class FrequentUsersService {
-  constructor(
-    @Inject('BOOKINGS-SERVICE') private client: ClientProxy,
-    private db: PrismaService,
-  ) {}
+  constructor(private db: PrismaService) {}
 
-  async getAllUsers(): Promise<User[] | string> {
+  async getAllUsers(): Promise<PersonalizedResponse | void> {
     try {
       const users = await this.db.users.findMany();
 
-      if (users.length === 0) return 'No frequent users yet.';
+      if (users.length === 0) {
+        return {
+          message: responses.noData.message,
+          statusCode: responses.noData.statusCode,
+        };
+      }
 
-      return users;
+      return CustomResponse.newResponse({ ...responses.success, data: users });
     } catch (error) {
       return error;
     }
   }
 
-  async getUser(memberNumber: number): Promise<User | string> {
+  async getUser(memberNumber: number): Promise<PersonalizedResponse | void> {
     try {
       const user = await this.db.users.findFirst({
         where: { memberNumber: memberNumber },
       });
 
-      if (!user) return 'User not found';
+      if (!user)
+        throw new RpcException({
+          message: errors.notFound.user.message,
+          statusCode: errors.notFound.user.statusCode,
+        });
 
-      return user;
+      return { ...responses.success, data: user };
     } catch (error) {
-      return error;
+      throw error;
     }
   }
 
@@ -43,20 +53,25 @@ export class FrequentUsersService {
   }: {
     memberNumber: number;
     newData: UpdatedUser;
-  }): Promise<User | string> {
+  }): Promise<PersonalizedResponse | void> {
     try {
       const userExists = await this.db.users.findFirst({
         where: { memberNumber: memberNumber },
       });
 
-      if (!userExists) return 'User not found.';
+      if (!userExists) {
+        return CustomError.newError(responses.noData);
+      }
 
       const updatedUser = await this.db.users.update({
         where: { memberNumber: memberNumber },
         data: newData,
       });
 
-      return updatedUser;
+      return CustomResponse.newResponse({
+        ...responses.success,
+        data: updatedUser,
+      });
     } catch (error) {
       return error;
     }
@@ -68,13 +83,15 @@ export class FrequentUsersService {
   }: {
     user: NewUser;
     email: string;
-  }): Promise<User | string> {
+  }): Promise<PersonalizedResponse | void> {
     try {
       const userExists = await this.db.users.findFirst({
         where: { email: email },
       });
 
-      if (userExists) return 'User already exists.';
+      if (userExists) {
+        return CustomError.newError(errors.conflict);
+      }
 
       let newMemberNumber = 0;
 
@@ -100,7 +117,10 @@ export class FrequentUsersService {
 
       const newUser = await this.db.users.create({ data: newMemberData });
 
-      return newUser;
+      return CustomResponse.newResponse({
+        ...responses.success,
+        data: newUser,
+      });
     } catch (error) {
       return error;
     }
