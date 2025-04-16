@@ -15,7 +15,7 @@ export class FrequentUsersService {
 
       return value;
     } catch (error) {
-      return error;
+      throw error;
     }
   }
 
@@ -48,7 +48,7 @@ export class FrequentUsersService {
 
       return value;
     } catch (error) {
-      return error;
+      throw error;
     }
   }
 }
