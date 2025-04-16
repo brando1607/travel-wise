@@ -23,7 +23,7 @@ export class FrequentUsersService {
 
       return { ...responses.success, data: users };
     } catch (error) {
-      return error;
+      throw error;
     }
   }
 
@@ -72,7 +72,7 @@ export class FrequentUsersService {
 
       return { ...responses.success, data: updatedUser };
     } catch (error) {
-      return error;
+      throw error;
     }
   }
 
@@ -121,7 +121,34 @@ export class FrequentUsersService {
 
       return { ...responses.success, data: newUser };
     } catch (error) {
-      return error;
+      throw error;
+    }
+  }
+
+  async deleteUser(memberNumber: number): Promise<PersonalizedResponse | void> {
+    try {
+      const userExists = await this.db.users.findFirst({
+        where: { memberNumber: memberNumber },
+      });
+
+      if (!userExists) {
+        throw new RpcException({
+          message: errors.notFound.user.message,
+          statusCode: errors.notFound.user.statusCode,
+        });
+      }
+
+      //delete user
+      await this.db.users.delete({
+        where: { memberNumber: memberNumber },
+      });
+
+      return {
+        message: responses.noData.message,
+        statusCode: responses.noData.statusCode,
+      };
+    } catch (error) {
+      throw error;
     }
   }
 }

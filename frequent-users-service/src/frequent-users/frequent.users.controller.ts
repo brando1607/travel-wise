@@ -14,7 +14,7 @@ export class FrequentUsersController {
 
       return users;
     } catch (error) {
-      return error;
+      throw error;
     }
   }
 
@@ -45,7 +45,19 @@ export class FrequentUsersController {
 
       return updatedUser;
     } catch (error) {
-      return error;
+      throw error;
+    }
+  }
+
+  @MessagePattern({ cmd: 'deleteUser' })
+  async deleteUser(memberNumber: number): Promise<PersonalizedResponse | void> {
+    try {
+      const deleteUser =
+        await this.frequentUsersService.deleteUser(memberNumber);
+
+      return deleteUser;
+    } catch (error) {
+      throw error;
     }
   }
 }
