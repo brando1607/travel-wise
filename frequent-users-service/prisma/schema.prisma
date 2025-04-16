@@ -13,6 +13,13 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Status {
+  ACTIVE
+  BLOCKED
+  INACTIVE
+  SUSPENDED
+}
+
 model Users {
   memberNumber Int      @id
   name         String
@@ -20,6 +27,7 @@ model Users {
   email        String   @unique
   dateOfBirth  DateTime //date input in front end
   country      String //from drop down list in front end
+  status       Status   @default(ACTIVE)
   bookings     String[] @default([])
 
   @@map("users")
