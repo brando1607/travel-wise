@@ -4,8 +4,6 @@ import { UpdatedUser, NewUser, PersonalizedResponse } from './types';
 import { encryption } from 'src/utils/encryptAndDecrypt.function';
 import { errors } from 'src/utils/dictionaries/errors.dictionary';
 import { responses } from 'src/utils/dictionaries/responses.distionary';
-import { CustomError } from 'src/utils/custom.errors';
-import { CustomResponse } from 'src/utils/custom.response';
 import { RpcException } from '@nestjs/microservices';
 
 @Injectable()
@@ -23,7 +21,7 @@ export class FrequentUsersService {
         };
       }
 
-      return CustomResponse.newResponse({ ...responses.success, data: users });
+      return { ...responses.success, data: users };
     } catch (error) {
       return error;
     }
@@ -35,11 +33,12 @@ export class FrequentUsersService {
         where: { memberNumber: memberNumber },
       });
 
-      if (!user)
+      if (!user) {
         throw new RpcException({
           message: errors.notFound.user.message,
           statusCode: errors.notFound.user.statusCode,
         });
+      }
 
       return { ...responses.success, data: user };
     } catch (error) {
@@ -60,7 +59,10 @@ export class FrequentUsersService {
       });
 
       if (!userExists) {
-        return CustomError.newError(responses.noData);
+        throw new RpcException({
+          message: errors.notFound.user.message,
+          statusCode: errors.notFound.user.statusCode,
+        });
       }
 
       const updatedUser = await this.db.users.update({
@@ -68,10 +70,7 @@ export class FrequentUsersService {
         data: newData,
       });
 
-      return CustomResponse.newResponse({
-        ...responses.success,
-        data: updatedUser,
-      });
+      return { ...responses.success, data: updatedUser };
     } catch (error) {
       return error;
     }
@@ -90,7 +89,10 @@ export class FrequentUsersService {
       });
 
       if (userExists) {
-        return CustomError.newError(errors.conflict);
+        throw new RpcException({
+          message: errors.conflict.message,
+          statusCode: errors.conflict.statusCode,
+        });
       }
 
       let newMemberNumber = 0;
@@ -117,10 +119,7 @@ export class FrequentUsersService {
 
       const newUser = await this.db.users.create({ data: newMemberData });
 
-      return CustomResponse.newResponse({
-        ...responses.success,
-        data: newUser,
-      });
+      return { ...responses.success, data: newUser };
     } catch (error) {
       return error;
     }
