@@ -14,9 +14,10 @@ datasource db {
 }
 
 model Passwords {
-  memberNumber Int    @id
+  memberNumber Int     @id
   password     String //encrypted
-  tempPassword String
+  tempPassword String?
+  timeStamp    Int?
 
   @@map("passwords")
 }
