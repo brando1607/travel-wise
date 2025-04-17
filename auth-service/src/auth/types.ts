@@ -25,3 +25,10 @@ export type PersonalizedResponse = {
   statusCode: number;
   data?: any;
 };
+
+export type Login = string | number;
+
+export type Response = {
+  result: boolean;
+  message?: string;
+};
