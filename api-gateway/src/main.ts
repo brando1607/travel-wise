@@ -4,6 +4,7 @@ import { Transport, MicroserviceOptions } from '@nestjs/microservices';
 import { port } from './utils/port.utils';
 import { CustomInterceptor } from './utils/custom.interceptor';
 import { CustomExceptionFilter } from './utils/custom.filter';
+import * as cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -19,6 +20,8 @@ async function bootstrap() {
   microservice.useGlobalInterceptors(new CustomInterceptor());
 
   await app.startAllMicroservices();
+
+  app.use(cookieParser());
 
   await app.listen(port ?? 3000, () => {
     console.log(`Api gateway listening on port http://localhost:${port}`);
