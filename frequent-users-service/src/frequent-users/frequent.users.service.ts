@@ -46,6 +46,25 @@ export class FrequentUsersService {
     }
   }
 
+  async getUserEmail(email: string): Promise<PersonalizedResponse | void> {
+    try {
+      const emailExists = await this.db.users.findFirst({
+        where: { email: email },
+      });
+
+      if (!emailExists) {
+        throw new RpcException({
+          message: errors.notFound.email.message,
+          statusCode: errors.notFound.email.statusCode,
+        });
+      }
+
+      return { ...responses.success, data: emailExists };
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async updateUser({
     memberNumber,
     newData,

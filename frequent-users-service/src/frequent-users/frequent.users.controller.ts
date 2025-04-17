@@ -29,6 +29,17 @@ export class FrequentUsersController {
     }
   }
 
+  @MessagePattern({ cmd: 'getUserEmail' })
+  async getUserEmail(email: string): Promise<PersonalizedResponse | void> {
+    try {
+      const emailExists = await this.frequentUsersService.getUserEmail(email);
+
+      return emailExists;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   @MessagePattern({ cmd: 'updateUser' })
   async updateUser({
     memberNumber,
