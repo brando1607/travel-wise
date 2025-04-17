@@ -16,9 +16,43 @@ export class AuthController {
     password: string;
   }): Promise<Response> {
     try {
-      const userLogin = await this.authService.validLogin({ login, password });
+      const response = await this.authService.validLogin({ login, password });
 
-      return userLogin;
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @MessagePattern({ cmd: 'validateTempPassword' })
+  async validateTempPassword({
+    memberNumber,
+    tempPass,
+    newPass,
+  }: {
+    memberNumber: number;
+    tempPass: string;
+    newPass: string;
+  }): Promise<Response> {
+    try {
+      const response = await this.authService.validateTempPassword({
+        memberNumber,
+        tempPass,
+        newPass,
+      });
+
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @MessagePattern({ cmd: 'emailNotInUse' })
+  async emailNotInUse(email: string): Promise<Response> {
+    try {
+      const response = await this.authService.emailNotInUse(email);
+
+      return response;
     } catch (error) {
       throw error;
     }

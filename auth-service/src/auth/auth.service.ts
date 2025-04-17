@@ -145,4 +145,20 @@ export class AuthService {
       throw error;
     }
   }
+
+  async emailNotInUse(email: string): Promise<Response> {
+    try {
+      const validEmail = await lastValueFrom(
+        this.client.send({ cmd: 'getUserEmail' }, email),
+      );
+
+      if (validEmail.statusCode === 404) {
+        return { result: false, message: 'Email not found' };
+      }
+
+      return { result: true };
+    } catch (error) {
+      throw error;
+    }
+  }
 }
