@@ -15,7 +15,7 @@ datasource db {
 
 model Passwords {
   memberNumber Int     @id
-  password     String //encrypted
+  password     String //hashed
   tempPassword String?
   timeStamp    Int?
 
