@@ -1,10 +1,3 @@
-enum Status {
-  ACTIVE,
-  BLOCKED,
-  INACTIVE,
-  SUSPENDED,
-}
-
 type Users = {
   memberNumber: number;
   name: string;
@@ -13,8 +6,6 @@ type Users = {
   password: string;
   dateOfBirth: Date;
   country: string;
-  status: Status;
-  bookings: string[];
 };
 
 export type UpdatedUser = Partial<Users>;
