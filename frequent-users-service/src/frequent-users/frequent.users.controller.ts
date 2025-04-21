@@ -63,15 +63,12 @@ export class FrequentUsersController {
   @MessagePattern({ cmd: 'createUser' })
   async createUser({
     user,
-    email,
   }: {
     user: NewUser;
-    email: string;
   }): Promise<PersonalizedResponse | void> {
     try {
       const createUser = await this.frequentUsersService.createUser({
         user,
-        email,
       });
 
       return createUser;

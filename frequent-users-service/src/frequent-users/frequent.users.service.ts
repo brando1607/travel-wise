@@ -97,14 +97,12 @@ export class FrequentUsersService {
 
   async createUser({
     user,
-    email,
   }: {
     user: NewUser;
-    email: string;
   }): Promise<PersonalizedResponse | void> {
     try {
       const userExists = await this.db.users.findFirst({
-        where: { email: email },
+        where: { email: user.email },
       });
 
       if (userExists) {
@@ -128,11 +126,11 @@ export class FrequentUsersService {
         newMemberNumber = getMemberNumbers[0].memberNumber + 1;
       }
 
-      const encryptedEmail = encryption.encrypt(email);
+      //encrypt user's email
+      user.email = encryption.encrypt(user.email);
 
       const newMemberData = {
         memberNumber: newMemberNumber,
-        email: encryptedEmail,
         ...user,
       };
 
