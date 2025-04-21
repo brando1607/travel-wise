@@ -12,6 +12,27 @@ export class AuthService {
     private readonly db: PrismaService,
   ) {}
 
+  async addPassword({
+    memberNumber,
+    password,
+  }: {
+    memberNumber: number;
+    password: string;
+  }): Promise<Response> {
+    try {
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      //add data into db
+      await this.db.passwords.create({
+        data: { password: hashedPassword, memberNumber: memberNumber },
+      });
+
+      return { result: true };
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async validLogin({
     login,
     password,

@@ -7,6 +7,26 @@ import { Login, Response } from './types';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @MessagePattern({ cmd: 'addPassword' })
+  async addPassword({
+    memberNumber,
+    password,
+  }: {
+    memberNumber: number;
+    password: string;
+  }): Promise<Response> {
+    try {
+      const result = await this.authService.addPassword({
+        memberNumber,
+        password,
+      });
+
+      return result;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   @MessagePattern({ cmd: 'validLogin' })
   async validLogin({
     login,
