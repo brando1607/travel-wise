@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { FrequentUsersController } from './frequent-users/frequent.users.controller';
 import { FrequentUsersService } from './frequent-users/frequent.users.service';
+import { PassportModule } from '@nestjs/passport';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { FrequentUsersService } from './frequent-users/frequent.users.service';
         options: { host: 'localhost', port: 8000 },
       },
     ]),
+    PassportModule,
   ],
   controllers: [FrequentUsersController],
   providers: [FrequentUsersService],
