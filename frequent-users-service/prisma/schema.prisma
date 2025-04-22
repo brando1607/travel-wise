@@ -21,14 +21,15 @@ enum Status {
 }
 
 model Users {
-  memberNumber Int      @id
-  name         String
-  lastName     String
-  email        String   @unique
-  dateOfBirth  DateTime //date input in front end
-  country      String //from drop down list in front end
-  status       Status   @default(ACTIVE)
-  bookings     String[] @default([])
+  memberNumber   Int      @id
+  name           String
+  lastName       String
+  hashedEmail    String   @unique
+  encryptedEmail String
+  dateOfBirth    DateTime //date input in front end
+  country        String //from drop down list in front end
+  status         Status?  @default(ACTIVE)
+  bookings       String[] @default([])
 
   @@map("users")
 }
