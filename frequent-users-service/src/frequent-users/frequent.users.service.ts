@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UpdatedUser, NewUser, PersonalizedResponse } from './types';
 import { encryption } from 'src/utils/encryptAndDecrypt.function';
+import * as brcypt from 'bcrypt';
 import { errors } from 'src/utils/dictionaries/errors.dictionary';
 import { responses } from 'src/utils/dictionaries/responses.distionary';
 import { RpcException } from '@nestjs/microservices';
@@ -48,8 +49,10 @@ export class FrequentUsersService {
 
   async getUserEmail(email: string): Promise<PersonalizedResponse | void> {
     try {
+      const hashedEmail = await brcypt.hash(email, 10);
+
       const emailExists = await this.db.users.findFirst({
-        where: { email: email },
+        where: { hashedEmail: hashedEmail },
       });
 
       if (!emailExists) {
@@ -95,20 +98,28 @@ export class FrequentUsersService {
     }
   }
 
-  async createUser({
-    user,
-  }: {
-    user: NewUser;
-  }): Promise<PersonalizedResponse | void> {
+  async createUser(user: NewUser): Promise<PersonalizedResponse | void> {
     try {
+      let rawDate: Date;
+
+      if (typeof user.dateOfBirth === 'string') {
+        // Convert to Date (assumes DD-MM-YYYY)
+        let [day, month, year] = user.dateOfBirth.split(/[-/]/).map(Number);
+        rawDate = new Date(year, month - 1, day);
+      } else {
+        rawDate = user.dateOfBirth;
+      }
+
+      const hashedEmail = encryption.hash(user.email);
+
       const userExists = await this.db.users.findFirst({
-        where: { email: user.email },
+        where: { hashedEmail: hashedEmail },
       });
 
       if (userExists) {
         throw new RpcException({
-          message: errors.conflict.message,
-          statusCode: errors.conflict.statusCode,
+          message: errors.conflict.email.message,
+          statusCode: errors.conflict.email.statusCode,
         });
       }
 
@@ -127,11 +138,24 @@ export class FrequentUsersService {
       }
 
       //encrypt user's email
-      user.email = encryption.encrypt(user.email);
+
+      user.encryptedEmail = encryption.encrypt(user.email);
+
+      //hash user's email
+
+      user.hashedEmail = hashedEmail;
+
+      //format date of birth
+      user.dateOfBirth = rawDate;
 
       const newMemberData = {
         memberNumber: newMemberNumber,
-        ...user,
+        name: user.name,
+        lastName: user.lastName,
+        hashedEmail: user.hashedEmail,
+        encryptedEmail: user.encryptedEmail,
+        dateOfBirth: user.dateOfBirth,
+        country: user.country,
       };
 
       const newUser = await this.db.users.create({ data: newMemberData });

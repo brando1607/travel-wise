@@ -1,6 +1,13 @@
-import { Users } from '@prisma/client';
-
-export type User = Users;
+type Users = {
+  memberNumber: number;
+  name: string;
+  lastName: string;
+  email: string;
+  hashedEmail: string;
+  encryptedEmail: string;
+  dateOfBirth: Date | string;
+  country: string;
+};
 
 export type UpdatedUser = Partial<Users>;
 
