@@ -12,9 +12,10 @@ export class AuthService {
 
   async register(userData: UserData): Promise<NewUser> {
     try {
-      const { password, ...userWithoutPassword } = userData;
+      const { password, ...user } = userData;
+
       const createUser = await lastValueFrom(
-        this.UserClient.send({ cmd: 'createUser' }, userWithoutPassword),
+        this.UserClient.send({ cmd: 'createUser' }, user),
       );
 
       const memberNumber = createUser.data.memberNumber;
