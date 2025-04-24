@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UpdatedUser, NewUser, PersonalizedResponse } from './types';
 import { encryption } from 'src/utils/encryptAndDecrypt.function';
-import * as brcypt from 'bcrypt';
 import { errors } from 'src/utils/dictionaries/errors.dictionary';
 import { responses } from 'src/utils/dictionaries/responses.distionary';
 import { RpcException } from '@nestjs/microservices';
@@ -49,7 +48,7 @@ export class FrequentUsersService {
 
   async getUserEmail(email: string): Promise<PersonalizedResponse | void> {
     try {
-      const hashedEmail = await brcypt.hash(email, 10);
+      const hashedEmail = encryption.hash(email);
 
       const emailExists = await this.db.users.findFirst({
         where: { hashedEmail: hashedEmail },
