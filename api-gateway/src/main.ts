@@ -3,7 +3,8 @@ import { AppModule } from './app.module';
 import { Transport, MicroserviceOptions } from '@nestjs/microservices';
 import { port } from './utils/port.utils';
 import { CustomInterceptor } from './utils/custom.interceptor';
-import { CustomExceptionFilter } from './utils/custom.filter';
+import { RpcFilter } from './utils/rpc.exception.filter';
+import { HttpFilter } from './utils/http.exception.filter';
 import * as cookieParser from 'cookie-parser';
 
 async function bootstrap() {
@@ -13,10 +14,10 @@ async function bootstrap() {
     options: { host: 'localhost', port: port },
   });
 
-  app.useGlobalFilters(new CustomExceptionFilter());
+  app.useGlobalFilters(new RpcFilter(), new HttpFilter());
   app.useGlobalInterceptors(new CustomInterceptor());
 
-  microservice.useGlobalFilters(new CustomExceptionFilter());
+  microservice.useGlobalFilters(new RpcFilter(), new HttpFilter());
   microservice.useGlobalInterceptors(new CustomInterceptor());
 
   await app.startAllMicroservices();
