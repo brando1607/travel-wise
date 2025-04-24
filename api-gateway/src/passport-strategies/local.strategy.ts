@@ -13,5 +13,19 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
     super();
   }
 
-  async validate(username: string, password: string): Promise<any> {}
+  async validate(username: number | string, password: string): Promise<string> {
+    try {
+      const userLogin = await lastValueFrom(
+        this.AuthClient.send({ cmd: 'validLogin' }, { username, password }),
+      );
+
+      if (!userLogin.result) {
+        throw new UnauthorizedException(userLogin.message);
+      }
+
+      return userLogin.data;
+    } catch (error) {
+      throw error;
+    }
+  }
 }
