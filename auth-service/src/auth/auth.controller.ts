@@ -29,14 +29,17 @@ export class AuthController {
 
   @MessagePattern({ cmd: 'validLogin' })
   async validLogin({
-    login,
+    username,
     password,
   }: {
-    login: Login;
+    username: Login;
     password: string;
   }): Promise<Response> {
     try {
-      const response = await this.authService.validLogin({ login, password });
+      const response = await this.authService.validLogin({
+        username,
+        password,
+      });
 
       return response;
     } catch (error) {
