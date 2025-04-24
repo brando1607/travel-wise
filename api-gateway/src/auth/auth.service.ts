@@ -1,13 +1,16 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { lastValueFrom } from 'rxjs';
-import { NewUser, UserData } from './types';
+import { NewUser, UserData, TokenData, Result } from './types';
+import { JwtService } from '@nestjs/jwt';
+import { HttpException } from '@nestjs/common';
 
 @Injectable()
 export class AuthService {
   constructor(
     @Inject('FREQUENT-USERS-SERVICE') private UserClient: ClientProxy,
     @Inject('AUTH-SERVICE') private AuthClient: ClientProxy,
+    private jwtService: JwtService,
   ) {}
 
   async register(userData: UserData): Promise<NewUser> {
@@ -33,5 +36,25 @@ export class AuthService {
     } catch (error) {
       throw error;
     }
+  }
+
+  async login({
+    token,
+    tokenData,
+  }: {
+    token: boolean;
+    tokenData: TokenData;
+  }): Promise<Result> {
+    if (token) throw new HttpException('User already logged in.', 400);
+
+    const payload = {
+      memberNumber: tokenData.memberNumber,
+      lastName: tokenData.lastName,
+      country: tokenData.country,
+    };
+
+    const accessToken = await this.jwtService.signAsync(payload);
+
+    return { statusCode: 200, message: accessToken };
   }
 }

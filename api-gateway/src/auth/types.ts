@@ -26,3 +26,17 @@ export type Response = {
   result: boolean;
   message?: string;
 };
+
+export type TokenData = {
+  memberNumber: number;
+  lastName: string;
+  country: string;
+};
+
+export type Result = { statusCode: number; message: string };
+
+export type Payload = {
+  sub: number;
+  lastName: string;
+  country: string;
+};
