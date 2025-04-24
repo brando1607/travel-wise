@@ -46,7 +46,18 @@ export class AuthController {
 
       res.cookie('loginToken', createToken.message);
 
-      return { statusCode: 200, message: 'Login successfull, token created' };
+      return { statusCode: 204, message: 'Login successfull, token created' };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @Get('logout')
+  async logout(@Res() res: Response): Promise<Result> {
+    try {
+      res.clearCookie('loginToken');
+
+      return { statusCode: 204, message: 'User logged out.' };
     } catch (error) {
       throw error;
     }
