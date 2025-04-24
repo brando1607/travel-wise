@@ -2,7 +2,7 @@ import { Injectable, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { lastValueFrom } from 'rxjs';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { Login, Response } from './types';
+import { Login, Response, TokenData } from './types';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -34,37 +34,50 @@ export class AuthService {
   }
 
   async validLogin({
-    login,
+    username,
     password,
   }: {
-    login: Login;
+    username: Login;
     password: string;
   }): Promise<Response> {
     try {
-      const loginIsMemberNumber = typeof login === 'number' ? true : false;
+      const loginIsMemberNumber = typeof username === 'number' ? true : false;
       let validLogin = false;
       let memberNumber: number;
+      let tokenData: TokenData;
 
       if (loginIsMemberNumber) {
         const validMemberNumber = await lastValueFrom(
-          this.client.send({ cmd: 'getUser' }, login),
+          this.client.send({ cmd: 'getUser' }, username),
         );
 
         if (validMemberNumber.statusCode === 404) {
-          return { result: validLogin, message: 'Invalid member or password' };
+          return { result: validLogin, message: 'Invalid login or password' };
         }
 
         memberNumber = validMemberNumber.data.memberNumber;
+
+        tokenData = {
+          memberNumber: validMemberNumber.data.memberNumber,
+          lastName: validMemberNumber.data.lastName,
+          country: validMemberNumber.data.country,
+        };
       } else {
         const userEmail = await lastValueFrom(
-          this.client.send({ cmd: 'getUserEmail' }, login),
+          this.client.send({ cmd: 'getUserEmail' }, username),
         );
 
-        if ((userEmail.statusCode = 404)) {
-          return { result: validLogin, message: 'Invalid member or password' };
+        if (userEmail.statusCode === 404) {
+          return { result: validLogin, message: 'Invalid login or password' };
         }
 
         memberNumber = userEmail.data.memberNumber;
+
+        tokenData = {
+          memberNumber: userEmail.data.memberNumber,
+          lastName: userEmail.data.lastName,
+          country: userEmail.data.country,
+        };
       }
 
       const currentPassword = await this.db.passwords.findFirst({
@@ -72,21 +85,25 @@ export class AuthService {
         where: { memberNumber: memberNumber },
       });
 
-      if (!currentPassword) return { result: false };
-
-      const hashedPassword = await bcrypt.hash(password, 10);
+      if (!currentPassword)
+        return { result: false, message: 'Invalid login or password' };
 
       const validPassword = await bcrypt.compare(
-        hashedPassword,
+        password,
         currentPassword.password,
       );
 
-      if (!validPassword)
-        return { result: validLogin, message: 'Invalid member or password' };
+      if (!validPassword) {
+        return { result: validLogin, message: 'Invalid login or password' };
+      }
 
       validLogin = true;
 
-      return { result: validLogin, message: 'Successfull login.' };
+      return {
+        result: validLogin,
+        message: 'Successfull login.',
+        data: tokenData,
+      };
     } catch (error) {
       throw error;
     }

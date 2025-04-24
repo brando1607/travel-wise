@@ -31,4 +31,11 @@ export type Login = string | number;
 export type Response = {
   result: boolean;
   message?: string;
+  data?: any;
+};
+
+export type TokenData = {
+  memberNumber: number;
+  lastName: string;
+  country: string;
 };
