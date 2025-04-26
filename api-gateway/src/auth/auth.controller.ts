@@ -44,7 +44,7 @@ export class AuthController {
 
       const createToken = await this.authService.login({ token, tokenData });
 
-      res.cookie('loginToken', createToken.message);
+      res.cookie('loginToken', createToken.message, { maxAge: 30 * 60 * 1000 });
 
       return { statusCode: 204, message: 'Login successfull, token created' };
     } catch (error) {
@@ -53,7 +53,7 @@ export class AuthController {
   }
 
   @Get('logout')
-  async logout(@Res() res: Response): Promise<Result> {
+  async logout(@Res({ passthrough: true }) res: Response): Promise<Result> {
     try {
       res.clearCookie('loginToken');
 
