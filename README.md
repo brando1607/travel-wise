@@ -66,12 +66,10 @@ TravelWise is composed of several services working together in a microservices a
 
 Each service lives in its own folder within the repository:
 
-```
 /api-gateway
 /auth
 /bookings
 /frequent-users
-```
 
 ### Communication
 
@@ -141,7 +139,7 @@ Distance Matrix API — to calculate distances and travel durations
 
 This module is still under active design and development.
 
-🧠 Caching & Optimization
+-- Caching & Optimization
 Redis will be used for:
 
 Caching frequently accessed data
