@@ -68,7 +68,6 @@ Each service lives in its own folder within the repository:
 
 /api-gateway
 /auth
-/bookings
 /frequent-users
 
 ### Communication
@@ -89,6 +88,7 @@ Microservices communicate using **NestJS transport layers**, enabling **loose co
 The TravelWise platform is actively evolving. Upcoming features and enhancements include:
 
 -- Enhanced Authentication
+
 Integration of Passport strategies for:
 
 GitHub login
@@ -96,6 +96,7 @@ GitHub login
 Google login
 
 -- Email Notifications Service
+
 A dedicated Email Service will handle transactional emails for both users and bookings:
 
 - User Events
@@ -112,6 +113,7 @@ Alert after 3 failed login attempts
 Account blocked notification
 
 - Booking Events
+
   Confirmation email when a booking is created
 
 Notification for booking updates
@@ -119,10 +121,12 @@ Notification for booking updates
 Cancellation email
 
 -- Inter-service Communication
+
 Transition to RabbitMQ for asynchronous messaging between microservices
 (ensuring better scalability and fault tolerance)
 
 -- Smart Booking Options (Concept in Progress)
+
 The Bookings service will allow users to input an origin and destination (via address or airport). Based on the distance, the system will suggest:
 
 Car trips
@@ -140,6 +144,7 @@ Distance Matrix API — to calculate distances and travel durations
 This module is still under active design and development.
 
 -- Caching & Optimization
+
 Redis will be used for:
 
 Caching frequently accessed data
