@@ -6,9 +6,13 @@ import {
   Param,
   Body,
   Controller,
+  UseGuards,
+  Req,
 } from '@nestjs/common';
+import { Request } from 'express';
 import { FrequentUsersService } from './frequent.users.service';
-import { PersonalizedResponse } from './types';
+import { PersonalizedResponse, NewData, TokenData } from './types';
+import { JwtGuard } from 'src/guards/jwt.guard';
 
 @Controller('frequent-users')
 export class FrequentUsersController {
@@ -33,6 +37,30 @@ export class FrequentUsersController {
       const result = await this.frequentUsersService.getUser(
         Number(memberNumber),
       );
+
+      return result;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @Patch()
+  @UseGuards(JwtGuard)
+  async updateUser(
+    @Body() newData: NewData,
+    @Req() req: Request,
+  ): Promise<PersonalizedResponse | void> {
+    try {
+      const token = req.user as TokenData;
+      let result: any;
+
+      if (token) {
+        const memberNumber = token.memberNumber;
+        result = await this.frequentUsersService.updateUser({
+          memberNumber,
+          newData,
+        });
+      }
 
       return result;
     } catch (error) {

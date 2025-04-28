@@ -1,15 +1,17 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { lastValueFrom } from 'rxjs';
-import { UpdatedUser, PersonalizedResponse } from './types';
+import { NewData, PersonalizedResponse } from './types';
 
 @Injectable()
 export class FrequentUsersService {
-  constructor(@Inject('FREQUENT-USERS-SERVICE') private client: ClientProxy) {}
+  constructor(
+    @Inject('FREQUENT-USERS-SERVICE') private UserClient: ClientProxy,
+  ) {}
 
   async getAllUsers(): Promise<PersonalizedResponse | void> {
     try {
-      const result = this.client.send({ cmd: 'getAllUsers' }, {});
+      const result = this.UserClient.send({ cmd: 'getAllUsers' }, {});
 
       const value = await lastValueFrom(result);
 
@@ -21,7 +23,7 @@ export class FrequentUsersService {
 
   async getUser(memberNumber: number): Promise<PersonalizedResponse | void> {
     try {
-      const result = this.client.send({ cmd: 'getUser' }, memberNumber);
+      const result = this.UserClient.send({ cmd: 'getUser' }, memberNumber);
 
       const value = await lastValueFrom(result);
 
@@ -36,17 +38,45 @@ export class FrequentUsersService {
     newData,
   }: {
     memberNumber: number;
-    newData: UpdatedUser;
+    newData: NewData;
   }): Promise<PersonalizedResponse | void> {
     try {
-      const result = this.client.send(
-        { cmd: 'updateUser' },
-        { memberNumber, newData },
-      );
+      let updatedData: NewData = {};
 
-      const value = await lastValueFrom(result);
+      if (newData.newFirstName) {
+        const result = await lastValueFrom(
+          this.UserClient.send(
+            { cmd: 'updateFirstName' },
+            { newFirstName: newData.newFirstName, memberNumber: memberNumber },
+          ),
+        );
 
-      return value;
+        updatedData.newFirstName = result.message;
+      }
+
+      if (newData.newLastName) {
+        const result = await lastValueFrom(
+          this.UserClient.send(
+            { cmd: 'updateLasttName' },
+            { newLastName: newData.newLastName, memberNumber: memberNumber },
+          ),
+        );
+
+        updatedData.newLastName = result.message;
+      }
+
+      if (newData.newCountry) {
+        const result = await lastValueFrom(
+          this.UserClient.send(
+            { cmd: 'updateCountry' },
+            { newCountry: newData.newCountry, memberNumber: memberNumber },
+          ),
+        );
+
+        updatedData.newCountry = result.message;
+      }
+
+      return { statusCode: 200, data: updatedData };
     } catch (error) {
       throw error;
     }
