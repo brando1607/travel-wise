@@ -64,7 +64,7 @@ export class FrequentUsersController {
   }
 
   @MessagePattern({ cmd: 'updateCountry' })
-  async updateUser({
+  async updateCountry({
     newCountry,
     memberNumber,
   }: {
