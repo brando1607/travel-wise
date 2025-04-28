@@ -33,7 +33,7 @@ export class FrequentUsersService {
     }
   }
 
-  async updateUser({
+  async updateCountry({
     memberNumber,
     newData,
   }: {
@@ -43,38 +43,14 @@ export class FrequentUsersService {
     try {
       let updatedData: NewData = {};
 
-      if (newData.newFirstName) {
-        const result = await lastValueFrom(
-          this.UserClient.send(
-            { cmd: 'updateFirstName' },
-            { newFirstName: newData.newFirstName, memberNumber: memberNumber },
-          ),
-        );
+      const result = await lastValueFrom(
+        this.UserClient.send(
+          { cmd: 'updateCountry' },
+          { newCountry: newData.newCountry, memberNumber: memberNumber },
+        ),
+      );
 
-        updatedData.newFirstName = result.message;
-      }
-
-      if (newData.newLastName) {
-        const result = await lastValueFrom(
-          this.UserClient.send(
-            { cmd: 'updateLasttName' },
-            { newLastName: newData.newLastName, memberNumber: memberNumber },
-          ),
-        );
-
-        updatedData.newLastName = result.message;
-      }
-
-      if (newData.newCountry) {
-        const result = await lastValueFrom(
-          this.UserClient.send(
-            { cmd: 'updateCountry' },
-            { newCountry: newData.newCountry, memberNumber: memberNumber },
-          ),
-        );
-
-        updatedData.newCountry = result.message;
-      }
+      updatedData.newCountry = result.message;
 
       return { statusCode: 200, data: updatedData };
     } catch (error) {

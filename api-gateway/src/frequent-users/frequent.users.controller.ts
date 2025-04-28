@@ -56,7 +56,7 @@ export class FrequentUsersController {
 
       if (token) {
         const memberNumber = token.memberNumber;
-        result = await this.frequentUsersService.updateUser({
+        result = await this.frequentUsersService.updateCountry({
           memberNumber,
           newData,
         });
