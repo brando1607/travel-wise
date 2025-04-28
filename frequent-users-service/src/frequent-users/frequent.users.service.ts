@@ -67,36 +67,6 @@ export class FrequentUsersService {
     }
   }
 
-  async updateUser({
-    memberNumber,
-    newData,
-  }: {
-    memberNumber: number;
-    newData: UpdatedUser;
-  }): Promise<PersonalizedResponse | void> {
-    try {
-      const userExists = await this.db.users.findFirst({
-        where: { memberNumber: memberNumber },
-      });
-
-      if (!userExists) {
-        throw new RpcException({
-          message: errors.notFound.user.message,
-          statusCode: errors.notFound.user.statusCode,
-        });
-      }
-
-      const updatedUser = await this.db.users.update({
-        where: { memberNumber: memberNumber },
-        data: newData,
-      });
-
-      return { ...responses.success, data: updatedUser };
-    } catch (error) {
-      throw error;
-    }
-  }
-
   async createUser(user: NewUser): Promise<PersonalizedResponse | void> {
     try {
       let rawDate: Date;
@@ -187,6 +157,36 @@ export class FrequentUsersService {
         message: responses.noData.message,
         statusCode: responses.noData.statusCode,
       };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async updateCountry({
+    newCountry,
+    memberNumber,
+  }: {
+    newCountry: UpdatedUser;
+    memberNumber: number;
+  }): Promise<PersonalizedResponse | void> {
+    try {
+      const userExists = await this.db.users.findFirst({
+        where: { memberNumber: memberNumber },
+      });
+
+      if (!userExists) {
+        throw new RpcException({
+          message: errors.notFound.user.message,
+          statusCode: errors.notFound.user.statusCode,
+        });
+      }
+
+      const updatedCountry = await this.db.users.update({
+        where: { memberNumber: memberNumber },
+        data: { country: newCountry as string },
+      });
+
+      return { ...responses.success, data: updatedCountry };
     } catch (error) {
       throw error;
     }

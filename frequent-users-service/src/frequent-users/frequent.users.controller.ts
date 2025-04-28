@@ -40,26 +40,6 @@ export class FrequentUsersController {
     }
   }
 
-  @MessagePattern({ cmd: 'updateUser' })
-  async updateUser({
-    memberNumber,
-    newData,
-  }: {
-    memberNumber: number;
-    newData: UpdatedUser;
-  }): Promise<PersonalizedResponse | void> {
-    try {
-      const updatedUser = await this.frequentUsersService.updateUser({
-        memberNumber,
-        newData,
-      });
-
-      return updatedUser;
-    } catch (error) {
-      throw error;
-    }
-  }
-
   @MessagePattern({ cmd: 'createUser' })
   async createUser(user: NewUser): Promise<PersonalizedResponse | void> {
     try {
@@ -78,6 +58,26 @@ export class FrequentUsersController {
         await this.frequentUsersService.deleteUser(memberNumber);
 
       return deleteUser;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @MessagePattern({ cmd: 'updateCountry' })
+  async updateUser({
+    newCountry,
+    memberNumber,
+  }: {
+    newCountry: UpdatedUser;
+    memberNumber: number;
+  }): Promise<PersonalizedResponse | void> {
+    try {
+      const updatedUser = await this.frequentUsersService.updateCountry({
+        memberNumber,
+        newCountry,
+      });
+
+      return { statusCode: 200, message: 'Country', data: updatedUser };
     } catch (error) {
       throw error;
     }
