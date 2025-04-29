@@ -170,23 +170,24 @@ export class FrequentUsersService {
     memberNumber: number;
   }): Promise<PersonalizedResponse | void> {
     try {
-      const userExists = await this.db.users.findFirst({
-        where: { memberNumber: memberNumber },
-      });
-
-      if (!userExists) {
-        throw new RpcException({
-          message: errors.notFound.user.message,
-          statusCode: errors.notFound.user.statusCode,
-        });
-      }
-
       const updatedCountry = await this.db.users.update({
         where: { memberNumber: memberNumber },
         data: { country: newCountry as string },
       });
 
       return { ...responses.success, data: updatedCountry };
+    } catch (error) {
+      throw error;
+    }
+  }
+  async updateName({
+    memberNumber,
+    newName,
+  }: {
+    memberNumber: number;
+    newName: UpdatedUser;
+  }): Promise<PersonalizedResponse | void> {
+    try {
     } catch (error) {
       throw error;
     }
