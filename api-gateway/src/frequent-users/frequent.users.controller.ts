@@ -46,7 +46,7 @@ export class FrequentUsersController {
 
   @Patch()
   @UseGuards(JwtGuard)
-  async updateUser(
+  async updateCountry(
     @Body() newData: NewData,
     @Req() req: Request,
   ): Promise<PersonalizedResponse | void> {
