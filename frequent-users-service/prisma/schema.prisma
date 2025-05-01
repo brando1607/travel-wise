@@ -21,15 +21,25 @@ enum Status {
 }
 
 model Users {
-  memberNumber   Int      @id
-  name           String
-  lastName       String
-  hashedEmail    String   @unique
-  encryptedEmail String
-  dateOfBirth    DateTime //date input in front end
-  country        String //from drop down list in front end
-  status         Status?  @default(ACTIVE)
-  bookings       String[] @default([])
+  memberNumber       Int                  @id
+  name               String
+  lastName           String
+  hashedEmail        String               @unique
+  encryptedEmail     String
+  dateOfBirth        DateTime //date input in front end
+  country            String //from drop down list in front end
+  status             Status?              @default(ACTIVE)
+  bookings           String[]             @default([])
+  PendingNameChanges PendingNameChanges[]
 
   @@map("users")
+}
+
+model PendingNameChanges {
+  memberNumber Int    @id
+  original     String
+  new          String
+  user         Users  @relation(fields: [memberNumber], references: [memberNumber])
+
+  @@map("pendingNameChanges")
 }
