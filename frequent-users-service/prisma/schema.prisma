@@ -20,6 +20,12 @@ enum Status {
   SUSPENDED
 }
 
+enum NameChangeStatus {
+  DONE
+  REJECTED
+  PENDING
+}
+
 model Users {
   memberNumber       Int                  @id
   name               String
@@ -36,10 +42,14 @@ model Users {
 }
 
 model PendingNameChanges {
-  memberNumber Int    @id
-  original     String
-  new          String
-  user         Users  @relation(fields: [memberNumber], references: [memberNumber])
+  id               Int              @id @default(autoincrement())
+  memberNumber     Int
+  originalName     String?
+  newName          String?
+  originalLastName String?
+  newLastName      String?
+  status           NameChangeStatus @default(PENDING)
+  user             Users            @relation(fields: [memberNumber], references: [memberNumber])
 
   @@map("pendingNameChanges")
 }
