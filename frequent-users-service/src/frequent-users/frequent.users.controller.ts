@@ -1,7 +1,13 @@
 import { Controller } from '@nestjs/common';
 import { FrequentUsersService } from './frequent.users.service';
 import { MessagePattern } from '@nestjs/microservices';
-import { UpdatedUser, PersonalizedResponse, NewUser } from './types';
+import {
+  UpdatedUser,
+  PersonalizedResponse,
+  NewUser,
+  NewCountry,
+  NameUpdate,
+} from './types';
 
 @Controller('frequent-users')
 export class FrequentUsersController {
@@ -68,16 +74,59 @@ export class FrequentUsersController {
     newCountry,
     memberNumber,
   }: {
-    newCountry: UpdatedUser;
+    newCountry: NewCountry;
     memberNumber: number;
   }): Promise<PersonalizedResponse | void> {
     try {
-      const updatedUser = await this.frequentUsersService.updateCountry({
+      const updatedCountry = await this.frequentUsersService.updateCountry({
         memberNumber,
         newCountry,
       });
 
-      return { statusCode: 200, message: 'Country', data: updatedUser };
+      return { statusCode: 200, message: 'Country', data: updatedCountry };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @MessagePattern({ cmd: 'updateName' })
+  async updateName({
+    memberNumber,
+    newName,
+  }: {
+    memberNumber: number;
+    newName: NameUpdate;
+  }): Promise<PersonalizedResponse | void> {
+    try {
+      const updateName = await this.frequentUsersService.updateName({
+        memberNumber,
+        newName,
+      });
+
+      return { statusCode: 200, message: 'Name', data: updateName };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @MessagePattern({ cmd: 'handleNameUpdate' })
+  async handleNameUpdate({
+    memberNumber,
+    id,
+    accept,
+  }: {
+    memberNumber: number;
+    id: number;
+    accept: boolean;
+  }): Promise<PersonalizedResponse | void> {
+    try {
+      const handleUpdate = await this.frequentUsersService.handleNameUpdate({
+        memberNumber,
+        id,
+        accept,
+      });
+
+      return handleUpdate;
     } catch (error) {
       throw error;
     }

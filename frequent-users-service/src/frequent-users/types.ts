@@ -18,3 +18,9 @@ export type PersonalizedResponse = {
   statusCode: number;
   data?: any;
 };
+
+export type NameUpdate = Pick<Users, 'name' | 'lastName'>;
+
+export type NewCountry = {
+  country: string;
+};

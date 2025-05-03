@@ -1,6 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { UpdatedUser, NewUser, PersonalizedResponse } from './types';
+import {
+  UpdatedUser,
+  NewUser,
+  PersonalizedResponse,
+  NameUpdate,
+  NewCountry,
+} from './types';
 import { encryption } from 'src/utils/encryptAndDecrypt.function';
 import { errors } from 'src/utils/dictionaries/errors.dictionary';
 import { responses } from 'src/utils/dictionaries/responses.distionary';
@@ -166,13 +172,19 @@ export class FrequentUsersService {
     newCountry,
     memberNumber,
   }: {
-    newCountry: UpdatedUser;
+    newCountry: NewCountry;
     memberNumber: number;
   }): Promise<PersonalizedResponse | void> {
     try {
+      if (!newCountry.country) {
+        throw new RpcException({
+          message: errors.missing.entry.message,
+          statusCode: errors.missing.entry.statusCode,
+        });
+      }
       const updatedCountry = await this.db.users.update({
         where: { memberNumber: memberNumber },
-        data: { country: newCountry as string },
+        data: { country: newCountry.country },
       });
 
       return { ...responses.success, data: updatedCountry };
@@ -185,9 +197,105 @@ export class FrequentUsersService {
     newName,
   }: {
     memberNumber: number;
-    newName: UpdatedUser;
+    newName: NameUpdate;
   }): Promise<PersonalizedResponse | void> {
     try {
+      if (!newName.lastName && !newName.name) {
+        throw new RpcException({
+          message: errors.missing.entry.message,
+          statusCode: errors.missing.entry.statusCode,
+        });
+      }
+
+      const currentNames = await this.db.users.findFirst({
+        where: { memberNumber: memberNumber },
+        select: { name: true, lastName: true },
+      });
+
+      const firstNameIsDifferent = newName.name !== currentNames!.name;
+      const lastNameIsDifferent = newName.lastName !== currentNames!.lastName;
+
+      if (!firstNameIsDifferent || !lastNameIsDifferent) {
+        throw new RpcException({
+          message: errors.missing.nameNotDifferent.message,
+          statusCode: errors.missing.nameNotDifferent.statusCode,
+        });
+      }
+
+      //insert into pending name changes table
+
+      await this.db.pendingNameChanges.create({
+        data: {
+          memberNumber: memberNumber,
+          originalName: firstNameIsDifferent ? currentNames!.name : null,
+          newName: firstNameIsDifferent ? newName.name : null,
+          originalLastName: lastNameIsDifferent ? currentNames!.lastName : null,
+          newLastName: lastNameIsDifferent ? newName.lastName : null,
+        },
+      });
+
+      return {
+        statusCode: responses.noData.statusCode,
+        message: 'Name change request sent for evaluation',
+      };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async handleNameUpdate({
+    memberNumber,
+    id,
+    accept,
+  }: {
+    memberNumber: number;
+    id: number;
+    accept: boolean;
+  }): Promise<PersonalizedResponse | void> {
+    try {
+      const pendingChange = await this.db.pendingNameChanges.findFirst({
+        where: { id: id },
+        select: { newLastName: true, newName: true },
+      });
+
+      if (!pendingChange) {
+        throw new RpcException({
+          message: errors.notFound.changeRequest.message,
+          statusCode: errors.notFound.changeRequest.statusCode,
+        });
+      }
+
+      if (accept) {
+        if (pendingChange.newLastName) {
+          await this.db.users.update({
+            where: { memberNumber: memberNumber },
+            data: { lastName: pendingChange.newLastName },
+          });
+        } else if (pendingChange.newName) {
+          await this.db.users.update({
+            where: { memberNumber: memberNumber },
+            data: { name: pendingChange.newName },
+          });
+        }
+
+        //update change status
+
+        await this.db.pendingNameChanges.update({
+          where: { id: id },
+          data: { status: 'DONE' },
+        });
+
+        return { ...responses.success };
+      } else {
+        //update change status
+
+        await this.db.pendingNameChanges.update({
+          where: { id: id },
+          data: { status: 'REJECTED' },
+        });
+
+        return { ...errors.forbidden.nameChangeNotAllowed };
+      }
     } catch (error) {
       throw error;
     }
