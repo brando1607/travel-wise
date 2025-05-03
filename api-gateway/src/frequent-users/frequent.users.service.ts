@@ -11,11 +11,11 @@ export class FrequentUsersService {
 
   async getAllUsers(): Promise<PersonalizedResponse | void> {
     try {
-      const result = this.UserClient.send({ cmd: 'getAllUsers' }, {});
+      const result = await lastValueFrom(
+        this.UserClient.send({ cmd: 'getAllUsers' }, {}),
+      );
 
-      const value = await lastValueFrom(result);
-
-      return value;
+      return result;
     } catch (error) {
       throw error;
     }
@@ -23,11 +23,11 @@ export class FrequentUsersService {
 
   async getUser(memberNumber: number): Promise<PersonalizedResponse | void> {
     try {
-      const result = this.UserClient.send({ cmd: 'getUser' }, memberNumber);
+      const result = await lastValueFrom(
+        this.UserClient.send({ cmd: 'getUser' }, memberNumber),
+      );
 
-      const value = await lastValueFrom(result);
-
-      return value;
+      return result;
     } catch (error) {
       throw error;
     }
@@ -41,8 +41,6 @@ export class FrequentUsersService {
     newData: NewData;
   }): Promise<PersonalizedResponse | void> {
     try {
-      let updatedData: NewData = {};
-
       const result = await lastValueFrom(
         this.UserClient.send(
           { cmd: 'updateCountry' },
@@ -50,9 +48,51 @@ export class FrequentUsersService {
         ),
       );
 
-      updatedData.newCountry = result.message;
+      return result;
+    } catch (error) {
+      throw error;
+    }
+  }
 
-      return { statusCode: 200, data: updatedData };
+  async updateName({
+    memberNumber,
+    newName,
+  }: {
+    memberNumber: number;
+    newName: NewData;
+  }): Promise<PersonalizedResponse | void> {
+    try {
+      const result = await lastValueFrom(
+        this.UserClient.send(
+          { cmd: 'updateName' },
+          { newName: newName, memberNumber: memberNumber },
+        ),
+      );
+
+      return result;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async handleNameUpdate({
+    memberNumber,
+    id,
+    accept,
+  }: {
+    memberNumber: number;
+    id: number;
+    accept: boolean;
+  }): Promise<PersonalizedResponse | void> {
+    try {
+      const result = await lastValueFrom(
+        this.UserClient.send(
+          { cmd: 'handleNameUpdate' },
+          { memberNumber, id, accept },
+        ),
+      );
+
+      return result;
     } catch (error) {
       throw error;
     }
