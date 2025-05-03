@@ -27,3 +27,8 @@ export type TokenData = {
   lastName: string;
   country: string;
 };
+
+export type HandleNameChange = {
+  id: number;
+  accept: boolean;
+};
