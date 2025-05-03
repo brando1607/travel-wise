@@ -6,10 +6,7 @@ import { Injectable, Inject, UnauthorizedException } from '@nestjs/common';
 
 @Injectable()
 export class LocalStrategy extends PassportStrategy(Strategy) {
-  constructor(
-    @Inject('FREQUENT-USERS-SERVICE') private UserClient: ClientProxy,
-    @Inject('AUTH-SERVICE') private AuthClient: ClientProxy,
-  ) {
+  constructor(@Inject('AUTH-SERVICE') private AuthClient: ClientProxy) {
     super();
   }
 
