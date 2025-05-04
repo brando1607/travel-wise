@@ -80,4 +80,27 @@ export class AuthController {
       throw error;
     }
   }
+
+  @MessagePattern({ cmd: 'changePassword' })
+  async changePassword({
+    memberNumber,
+    currPass,
+    newPass,
+  }: {
+    memberNumber: number;
+    currPass: string;
+    newPass: string;
+  }): Promise<Response> {
+    try {
+      const result = await this.authService.changePassword({
+        memberNumber,
+        currPass,
+        newPass,
+      });
+
+      return result;
+    } catch (error) {
+      throw error;
+    }
+  }
 }

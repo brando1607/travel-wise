@@ -3,6 +3,10 @@ import { ClientProxy } from '@nestjs/microservices';
 import { lastValueFrom } from 'rxjs';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Login, Response, TokenData } from './types';
+import { responses } from 'src/utils/dictionaries/responses.distionary';
+import { errors } from 'src/utils/dictionaries/errors.dictionary';
+import { RpcException } from '@nestjs/microservices';
+
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -20,9 +24,28 @@ export class AuthService {
     password: string;
   }): Promise<Response> {
     try {
-      const hashedPassword = await bcrypt.hash(password, 10);
+      const user = await lastValueFrom(
+        this.client.send({ cmd: 'getUser' }, memberNumber),
+      );
 
-      //add data into db
+      const userName = user.data.name;
+
+      const nameIsInPassword = password.toLowerCase().includes(userName);
+
+      if (nameIsInPassword) {
+        //delete user and throw error
+
+        await lastValueFrom(
+          this.client.send({ cmd: 'deleteUser' }, memberNumber),
+        );
+
+        throw new RpcException({
+          statusCode: errors.badRequest.nameInPassword.statusCode,
+          message: errors.badRequest.nameInPassword.message,
+        });
+      }
+      const hashedPassword = await bcrypt.hash(password, 10);
+      // add data into db
       await this.db.passwords.create({
         data: { password: hashedPassword, memberNumber: memberNumber },
       });
@@ -195,6 +218,67 @@ export class AuthService {
       }
 
       return { result: true };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async changePassword({
+    memberNumber,
+    currPass,
+    newPass,
+  }: {
+    memberNumber: number;
+    currPass: string;
+    newPass: string;
+  }): Promise<Response> {
+    try {
+      const userPassword = await this.db.passwords.findFirst({
+        where: { memberNumber: memberNumber },
+      });
+
+      const user = await lastValueFrom(
+        this.client.send({ cmd: 'getUser' }, memberNumber),
+      );
+
+      const userName = user.data.name;
+
+      const nameIsInPassword = newPass.toLowerCase().includes(userName);
+
+      if (nameIsInPassword) {
+        throw new RpcException({
+          statusCode: errors.badRequest.nameInPassword.statusCode,
+          message: errors.badRequest.nameInPassword.message,
+        });
+      }
+
+      const currPasswordIsCorrect = await bcrypt.compare(
+        currPass,
+        userPassword!.password,
+      );
+
+      if (!currPasswordIsCorrect) {
+        throw new RpcException({
+          statusCode: errors.unauthorized.currentPassword.statusCode,
+          message: errors.unauthorized.currentPassword.message,
+        });
+      }
+
+      //update password
+
+      //hash new password
+
+      const hashedPassword = await bcrypt.hash(newPass, 10);
+
+      await this.db.passwords.update({
+        where: { memberNumber: memberNumber },
+        data: { password: hashedPassword },
+      });
+
+      return {
+        result: true,
+        message: 'Password changed. You must log in again.',
+      };
     } catch (error) {
       throw error;
     }
