@@ -74,7 +74,7 @@ export class FrequentUsersController {
     newCountry,
     memberNumber,
   }: {
-    newCountry: NewCountry;
+    newCountry: string;
     memberNumber: number;
   }): Promise<PersonalizedResponse | void> {
     try {

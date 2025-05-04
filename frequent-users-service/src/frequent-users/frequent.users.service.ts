@@ -172,19 +172,20 @@ export class FrequentUsersService {
     newCountry,
     memberNumber,
   }: {
-    newCountry: NewCountry;
+    newCountry: string;
     memberNumber: number;
   }): Promise<PersonalizedResponse | void> {
     try {
-      if (!newCountry.country) {
+      if (!newCountry) {
         throw new RpcException({
           message: errors.missing.entry.message,
           statusCode: errors.missing.entry.statusCode,
         });
       }
+
       const updatedCountry = await this.db.users.update({
         where: { memberNumber: memberNumber },
-        data: { country: newCountry.country },
+        data: { country: newCountry },
       });
 
       return { ...responses.success, data: updatedCountry };
@@ -200,7 +201,7 @@ export class FrequentUsersService {
     newName: NameUpdate;
   }): Promise<PersonalizedResponse | void> {
     try {
-      if (!newName.lastName && !newName.name) {
+      if (Object.keys(newName).length === 0) {
         throw new RpcException({
           message: errors.missing.entry.message,
           statusCode: errors.missing.entry.statusCode,
@@ -212,8 +213,9 @@ export class FrequentUsersService {
         select: { name: true, lastName: true },
       });
 
-      const firstNameIsDifferent = newName.name !== currentNames!.name;
-      const lastNameIsDifferent = newName.lastName !== currentNames!.lastName;
+      const firstNameIsDifferent = newName.newFirstName !== currentNames!.name;
+      const lastNameIsDifferent =
+        newName.newLastName !== currentNames!.lastName;
 
       if (!firstNameIsDifferent || !lastNameIsDifferent) {
         throw new RpcException({
@@ -224,15 +226,23 @@ export class FrequentUsersService {
 
       //insert into pending name changes table
 
-      await this.db.pendingNameChanges.create({
-        data: {
-          memberNumber: memberNumber,
-          originalName: firstNameIsDifferent ? currentNames!.name : null,
-          newName: firstNameIsDifferent ? newName.name : null,
-          originalLastName: lastNameIsDifferent ? currentNames!.lastName : null,
-          newLastName: lastNameIsDifferent ? newName.lastName : null,
-        },
-      });
+      if (newName.newLastName) {
+        await this.db.pending_name_changes.create({
+          data: {
+            memberNumber: memberNumber,
+            originalLastName: currentNames!.lastName,
+            newLastName: newName.newLastName,
+          },
+        });
+      } else if (newName.newFirstName) {
+        await this.db.pending_name_changes.create({
+          data: {
+            memberNumber: memberNumber,
+            originalName: currentNames!.name,
+            newName: newName.newFirstName,
+          },
+        });
+      }
 
       return {
         statusCode: responses.noData.statusCode,
@@ -253,7 +263,7 @@ export class FrequentUsersService {
     accept: boolean;
   }): Promise<PersonalizedResponse | void> {
     try {
-      const pendingChange = await this.db.pendingNameChanges.findFirst({
+      const pendingChange = await this.db.pending_name_changes.findFirst({
         where: { id: id },
         select: { newLastName: true, newName: true },
       });
@@ -280,7 +290,7 @@ export class FrequentUsersService {
 
         //update change status
 
-        await this.db.pendingNameChanges.update({
+        await this.db.pending_name_changes.update({
           where: { id: id },
           data: { status: 'DONE' },
         });
@@ -289,7 +299,7 @@ export class FrequentUsersService {
       } else {
         //update change status
 
-        await this.db.pendingNameChanges.update({
+        await this.db.pending_name_changes.update({
           where: { id: id },
           data: { status: 'REJECTED' },
         });

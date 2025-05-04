@@ -19,8 +19,11 @@ export type PersonalizedResponse = {
   data?: any;
 };
 
-export type NameUpdate = Pick<Users, 'name' | 'lastName'>;
+export type NameUpdate = {
+  newFirstName: string;
+  newLastName: string;
+};
 
 export type NewCountry = {
-  country: string;
+  newCountry: string;
 };
