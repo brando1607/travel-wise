@@ -57,4 +57,31 @@ export class AuthService {
 
     return { statusCode: 200, message: accessToken };
   }
+
+  async changePassword({
+    memberNumber,
+    currPass,
+    newPass,
+  }: {
+    memberNumber: number;
+    currPass: string;
+    newPass: string;
+  }): Promise<Result> {
+    try {
+      const result = await lastValueFrom(
+        this.AuthClient.send(
+          { cmd: 'changePassword' },
+          { memberNumber, currPass, newPass },
+        ),
+      );
+
+      if (!result.result) {
+        throw new HttpException(result.message, result.statusCode);
+      }
+
+      return { statusCode: 201, message: result.message };
+    } catch (error) {
+      throw error;
+    }
+  }
 }

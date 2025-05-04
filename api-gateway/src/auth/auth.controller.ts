@@ -11,9 +11,8 @@ import {
   Req,
 } from '@nestjs/common';
 import { Response, Request } from 'express';
-import { NewUser, UserData, TokenData, Result } from './types';
+import { NewUser, UserData, TokenData, Result, ChangePassword } from './types';
 import { AuthService } from './auth.service';
-import { UnauthorizedException } from '@nestjs/common';
 import { LocalGuard } from 'src/guards/local.guard';
 import { JwtGuard } from 'src/guards/jwt.guard';
 
@@ -58,6 +57,31 @@ export class AuthController {
       res.clearCookie('loginToken');
 
       return { statusCode: 204, message: 'User logged out.' };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @Patch('changePassword')
+  @UseGuards(JwtGuard)
+  async changePassword(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+    @Body() data: ChangePassword,
+  ): Promise<Result> {
+    try {
+      const token = req.user! as TokenData;
+      const { currPass, newPass } = data;
+      const memberNumber = token.memberNumber;
+      const result = await this.authService.changePassword({
+        memberNumber,
+        currPass,
+        newPass,
+      });
+
+      res.clearCookie('loginToken');
+
+      return { statusCode: result.statusCode, message: result.message };
     } catch (error) {
       throw error;
     }

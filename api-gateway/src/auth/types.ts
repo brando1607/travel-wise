@@ -41,3 +41,8 @@ export type Payload = {
   lastName: string;
   country: string;
 };
+
+export type ChangePassword = {
+  currPass: string;
+  newPass: string;
+};
