@@ -27,21 +27,21 @@ enum NameChangeStatus {
 }
 
 model Users {
-  memberNumber       Int                  @id
+  memberNumber       Int                    @id
   name               String
   lastName           String
-  hashedEmail        String               @unique
+  hashedEmail        String                 @unique
   encryptedEmail     String
   dateOfBirth        DateTime //date input in front end
   country            String //from drop down list in front end
-  status             Status?              @default(ACTIVE)
-  bookings           String[]             @default([])
-  PendingNameChanges PendingNameChanges[]
+  status             Status?                @default(ACTIVE)
+  bookings           String[]               @default([])
+  PendingNameChanges Pending_name_changes[]
 
   @@map("users")
 }
 
-model PendingNameChanges {
+model Pending_name_changes {
   id               Int              @id @default(autoincrement())
   memberNumber     Int
   originalName     String?
@@ -49,7 +49,7 @@ model PendingNameChanges {
   originalLastName String?
   newLastName      String?
   status           NameChangeStatus @default(PENDING)
-  user             Users            @relation(fields: [memberNumber], references: [memberNumber])
+  user             Users            @relation(fields: [memberNumber], references: [memberNumber], onDelete: Cascade)
 
-  @@map("pendingNameChanges")
+  @@map("pending_name_changes")
 }
