@@ -80,16 +80,13 @@ export class FrequentUsersController {
     @Req() req: Request,
   ): Promise<PersonalizedResponse | void> {
     try {
-      const token = req.user as TokenData;
-      let result: any;
+      const token = req.user! as TokenData;
 
-      if (token) {
-        const memberNumber = token.memberNumber;
-        result = await this.frequentUsersService.updateName({
-          memberNumber,
-          newName,
-        });
-      }
+      const memberNumber = token.memberNumber;
+      const result = await this.frequentUsersService.updateName({
+        memberNumber,
+        newName,
+      });
 
       return result;
     } catch (error) {
