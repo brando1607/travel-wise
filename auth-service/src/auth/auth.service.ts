@@ -3,16 +3,15 @@ import { ClientProxy } from '@nestjs/microservices';
 import { lastValueFrom } from 'rxjs';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Login, Response, TokenData } from './types';
-import { responses } from 'src/utils/dictionaries/responses.distionary';
 import { errors } from 'src/utils/dictionaries/errors.dictionary';
 import { RpcException } from '@nestjs/microservices';
-
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
   constructor(
-    @Inject('FREQUENT-USERS-SERVICE') private client: ClientProxy,
+    @Inject('FREQUENT-USERS-SERVICE') private userClient: ClientProxy,
+    @Inject('EMAIL-SERVICE') private emailClient: ClientProxy,
     private readonly db: PrismaService,
   ) {}
 
@@ -25,7 +24,7 @@ export class AuthService {
   }): Promise<Response> {
     try {
       const user = await lastValueFrom(
-        this.client.send({ cmd: 'getUser' }, memberNumber),
+        this.userClient.send({ cmd: 'getUser' }, memberNumber),
       );
 
       const userName = user.data.name;
@@ -36,7 +35,7 @@ export class AuthService {
         //delete user and throw error
 
         await lastValueFrom(
-          this.client.send({ cmd: 'deleteUser' }, memberNumber),
+          this.userClient.send({ cmd: 'deleteUser' }, memberNumber),
         );
 
         throw new RpcException({
@@ -71,7 +70,7 @@ export class AuthService {
 
       if (loginIsMemberNumber) {
         const validMemberNumber = await lastValueFrom(
-          this.client.send({ cmd: 'getUser' }, username),
+          this.userClient.send({ cmd: 'getUser' }, username),
         );
 
         if (validMemberNumber.statusCode === 404) {
@@ -87,7 +86,7 @@ export class AuthService {
         };
       } else {
         const userEmail = await lastValueFrom(
-          this.client.send({ cmd: 'getUserEmail' }, username),
+          this.userClient.send({ cmd: 'getUserEmail' }, username),
         );
 
         if (userEmail.statusCode === 404) {
@@ -210,7 +209,7 @@ export class AuthService {
   async emailNotInUse(email: string): Promise<Response> {
     try {
       const validEmail = await lastValueFrom(
-        this.client.send({ cmd: 'getUserEmail' }, email),
+        this.userClient.send({ cmd: 'getUserEmail' }, email),
       );
 
       if (validEmail.statusCode === 404) {
@@ -238,7 +237,7 @@ export class AuthService {
       });
 
       const user = await lastValueFrom(
-        this.client.send({ cmd: 'getUser' }, memberNumber),
+        this.userClient.send({ cmd: 'getUser' }, memberNumber),
       );
 
       const userName = user.data.name;

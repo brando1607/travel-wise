@@ -13,6 +13,11 @@ import { AuthService } from './auth/auth.service';
         transport: Transport.TCP,
         options: { host: 'localhost', port: 8000 },
       },
+      {
+        name: 'EMAIL-SERVICE',
+        transport: Transport.TCP,
+        options: { host: 'localhost', port: 8300 },
+      },
     ]),
   ],
   controllers: [AuthController],
