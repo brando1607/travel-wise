@@ -1,9 +1,26 @@
 import { Module } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { PrismaModule } from 'src/prisma/prisma.module';
+import { AuthController } from './auth.controller';
+import { ClientsModule, Transport } from '@nestjs/microservices';
 
 @Module({
   providers: [AuthService],
-  imports: [PrismaModule],
+  controllers: [AuthController],
+  imports: [
+    PrismaModule,
+    ClientsModule.register([
+      {
+        name: 'FREQUENT-USERS-SERVICE',
+        transport: Transport.TCP,
+        options: { host: 'localhost', port: 8000 },
+      },
+      {
+        name: 'EMAIL-SERVICE',
+        transport: Transport.TCP,
+        options: { host: 'localhost', port: 8300 },
+      },
+    ]),
+  ],
 })
 export class AuthModule {}

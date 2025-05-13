@@ -1,9 +1,11 @@
 import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
+import { BookingsModule } from './bookings/bookings.module';
 import { PrismaModule } from './prisma/prisma.module';
 
 @Module({
   imports: [
+    BookingsModule,
     PrismaModule,
     ClientsModule.register([
       {
@@ -18,7 +20,5 @@ import { PrismaModule } from './prisma/prisma.module';
       },
     ]),
   ],
-  controllers: [],
-  providers: [],
 })
 export class AppModule {}

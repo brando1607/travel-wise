@@ -1,12 +1,9 @@
 import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
+import { FrequentUsersModule } from './frequent-users/frequent.users.module';
 import { PrismaModule } from './prisma/prisma.module';
-import { FrequentUsersController } from './frequent-users/frequent.users.controller';
-import { FrequentUsersService } from './frequent-users/frequent.users.service';
 
 @Module({
-  imports: [PrismaModule, ClientsModule.register([])],
-  controllers: [FrequentUsersController],
-  providers: [FrequentUsersService],
+  imports: [PrismaModule, FrequentUsersModule, ClientsModule.register([])],
 })
 export class AppModule {}
