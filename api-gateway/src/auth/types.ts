@@ -43,6 +43,6 @@ export type Payload = {
 };
 
 export type ChangePassword = {
-  currPass: string;
+  tempPass: string;
   newPass: string;
 };

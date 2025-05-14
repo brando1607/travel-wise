@@ -58,20 +58,35 @@ export class AuthService {
     return { statusCode: 200, message: accessToken };
   }
 
+  async sendTemporaryPassword(login: string | number): Promise<Result> {
+    try {
+      await lastValueFrom(
+        this.AuthClient.send({ cmd: 'sendTemporaryPassword' }, login),
+      );
+
+      return {
+        statusCode: 200,
+        message: 'Temporary password sent in an email.',
+      };
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async changePassword({
     memberNumber,
-    currPass,
+    tempPass,
     newPass,
   }: {
     memberNumber: number;
-    currPass: string;
+    tempPass: string;
     newPass: string;
   }): Promise<Result> {
     try {
       const result = await lastValueFrom(
         this.AuthClient.send(
           { cmd: 'changePassword' },
-          { memberNumber, currPass, newPass },
+          { memberNumber, tempPass, newPass },
         ),
       );
 
