@@ -1,11 +1,12 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { lastValueFrom } from 'rxjs';
+import { last, lastValueFrom } from 'rxjs';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Login, Response, TokenData } from './types';
 import { errors } from 'src/utils/dictionaries/errors.dictionary';
 import { RpcException } from '@nestjs/microservices';
 import * as bcrypt from 'bcrypt';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class AuthService {
@@ -199,7 +200,7 @@ export class AuthService {
 
       return {
         result: true,
-        message: 'Password updated.',
+        message: 'Password updated. You must log in again.',
       };
     } catch (error) {
       throw error;
@@ -222,20 +223,59 @@ export class AuthService {
     }
   }
 
+  async sendTemporaryPassword(login: string | number): Promise<Response> {
+    try {
+      const temporaryPassword = crypto
+        .randomBytes(10)
+        .toString('hex')
+        .slice(0, 10);
+
+      const isLoginUserEmail = typeof login === 'string' ? true : false;
+
+      if (isLoginUserEmail) {
+        const user = await lastValueFrom(
+          this.userClient.send({ cmd: 'getUserEmail' }, login),
+        );
+
+        //send email
+
+        await lastValueFrom(
+          this.emailClient.send(
+            { cmd: 'sendTemporaryPassword' },
+            { email: user.data.email, temporaryPassword },
+          ),
+        );
+      } else {
+        const user = await lastValueFrom(
+          this.userClient.send({ cmd: 'getUser' }, login),
+        );
+
+        //send email
+
+        await lastValueFrom(
+          this.emailClient.send(
+            { cmd: 'sendTemporaryPassword' },
+            { email: user.data.email, temporaryPassword },
+          ),
+        );
+      }
+
+      return { result: true };
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async changePassword({
     memberNumber,
-    currPass,
+    tempPass,
     newPass,
   }: {
     memberNumber: number;
-    currPass: string;
+    tempPass: string;
     newPass: string;
   }): Promise<Response> {
     try {
-      const userPassword = await this.db.passwords.findFirst({
-        where: { memberNumber: memberNumber },
-      });
-
       const user = await lastValueFrom(
         this.userClient.send({ cmd: 'getUser' }, memberNumber),
       );
@@ -251,32 +291,27 @@ export class AuthService {
         });
       }
 
-      const currPasswordIsCorrect = await bcrypt.compare(
-        currPass,
-        userPassword!.password,
-      );
-
-      if (!currPasswordIsCorrect) {
-        throw new RpcException({
-          statusCode: errors.unauthorized.currentPassword.statusCode,
-          message: errors.unauthorized.currentPassword.message,
-        });
-      }
-
       //update password
 
-      //hash new password
-
-      const hashedPassword = await bcrypt.hash(newPass, 10);
-
-      await this.db.passwords.update({
-        where: { memberNumber: memberNumber },
-        data: { password: hashedPassword },
+      const updatePassword = await this.validateTempPassword({
+        memberNumber,
+        tempPass,
+        newPass,
       });
 
+      if (updatePassword.result) {
+        //send email
+        await lastValueFrom(
+          this.emailClient.send(
+            { cmd: 'updateUser' },
+            { email: user.data.email, updatedData: 'Password', memberNumber },
+          ),
+        );
+      }
+
       return {
-        result: true,
-        message: 'Password changed. You must log in again.',
+        result: updatePassword.result,
+        message: updatePassword.message,
       };
     } catch (error) {
       throw error;

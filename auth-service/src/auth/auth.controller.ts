@@ -81,20 +81,31 @@ export class AuthController {
     }
   }
 
+  @MessagePattern({ cmd: 'sendTemporaryPassword' })
+  async sendTemporaryPassword(login: string | number): Promise<Response> {
+    try {
+      const response = await this.authService.sendTemporaryPassword(login);
+
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   @MessagePattern({ cmd: 'changePassword' })
   async changePassword({
     memberNumber,
-    currPass,
+    tempPass,
     newPass,
   }: {
     memberNumber: number;
-    currPass: string;
+    tempPass: string;
     newPass: string;
   }): Promise<Response> {
     try {
       const result = await this.authService.changePassword({
         memberNumber,
-        currPass,
+        tempPass,
         newPass,
       });
 
