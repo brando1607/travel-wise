@@ -24,6 +24,11 @@ import { forwardRef } from '@nestjs/common';
         transport: Transport.TCP,
         options: { host: 'localhost', port: 8000 },
       },
+      {
+        name: 'EMAIL-SERVICE',
+        transport: Transport.TCP,
+        options: { host: 'localhost', port: 8300 },
+      },
     ]),
     JwtModule.register({
       global: true,

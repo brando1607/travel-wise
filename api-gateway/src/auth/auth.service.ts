@@ -10,6 +10,7 @@ export class AuthService {
   constructor(
     @Inject('FREQUENT-USERS-SERVICE') private UserClient: ClientProxy,
     @Inject('AUTH-SERVICE') private AuthClient: ClientProxy,
+    @Inject('EMAIL-SERVICE') private EmailClient: ClientProxy,
     private jwtService: JwtService,
   ) {}
 
@@ -29,6 +30,14 @@ export class AuthService {
         this.AuthClient.send(
           { cmd: 'addPassword' },
           { memberNumber, password },
+        ),
+      );
+
+      //send email confirmation
+      await lastValueFrom(
+        this.EmailClient.send(
+          { cmd: 'welcomeEmail' },
+          { email: user.email, memberNumber },
         ),
       );
 
