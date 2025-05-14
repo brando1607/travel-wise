@@ -46,7 +46,17 @@ export class FrequentUsersService {
         });
       }
 
-      return { ...responses.success, data: user };
+      const decryptedEmail = encryption.decrypt(user.encryptedEmail);
+
+      const userData = {
+        name: user.name,
+        lastName: user.lastName,
+        memberNumber,
+        country: user.country,
+        email: decryptedEmail,
+      };
+
+      return { ...responses.success, data: userData };
     } catch (error) {
       throw error;
     }
@@ -67,7 +77,16 @@ export class FrequentUsersService {
         });
       }
 
-      return { ...responses.success, data: emailExists };
+      const decryptedEmail = encryption.decrypt(emailExists.encryptedEmail);
+
+      const userData = {
+        memberNumber: emailExists.memberNumber,
+        lastName: emailExists.lastName,
+        country: emailExists.country,
+        email: decryptedEmail,
+      };
+
+      return { ...responses.success, data: userData };
     } catch (error) {
       throw error;
     }
