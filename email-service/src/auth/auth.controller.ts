@@ -1,6 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { AuthService } from './auth.service';
+import { Result } from './types';
 
 @Controller('auth')
 export class AuthController {
@@ -13,7 +14,7 @@ export class AuthController {
   }: {
     email: string;
     memberNumber: number;
-  }): Promise<void> {
+  }): Promise<Result | void> {
     try {
       const result = await this.authService.welcomeEmail({
         email,
@@ -33,7 +34,7 @@ export class AuthController {
   }: {
     email: string;
     tempPassword: string;
-  }): Promise<void> {
+  }): Promise<Result | void> {
     try {
       const result = await this.authService.sendTemporaryPassword({
         email,
@@ -55,7 +56,7 @@ export class AuthController {
     email: string;
     updatedData: string;
     memberNumber: number;
-  }): Promise<void> {
+  }): Promise<Result | void> {
     try {
       const result = await this.authService.updateUser({
         email,
