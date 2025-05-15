@@ -1,4 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
+import { ClientProxy } from '@nestjs/microservices';
+import { lastValueFrom } from 'rxjs';
 import { PrismaService } from 'src/prisma/prisma.service';
 import {
   UpdatedUser,
@@ -14,7 +16,11 @@ import { RpcException } from '@nestjs/microservices';
 
 @Injectable()
 export class FrequentUsersService {
-  constructor(private db: PrismaService) {}
+  constructor(
+    private db: PrismaService,
+    @Inject('EMAIL-SERVICE') private emailClient: ClientProxy,
+    @Inject('FREQUENT-USERS-SERVICE') private userClient: ClientProxy,
+  ) {}
 
   async getAllUsers(): Promise<PersonalizedResponse | void> {
     try {
@@ -207,6 +213,22 @@ export class FrequentUsersService {
         data: { country: newCountry },
       });
 
+      const user = await lastValueFrom(
+        this.userClient.send({ cmd: 'getUser' }, memberNumber),
+      );
+
+      //send email
+      await lastValueFrom(
+        this.emailClient.send(
+          { cmd: 'updateUser' },
+          {
+            email: user.data.email,
+            updatedData: 'Country',
+            memberNumber: user.data.memberNumber,
+          },
+        ),
+      );
+
       return { ...responses.success, data: updatedCountry };
     } catch (error) {
       throw error;
@@ -313,6 +335,22 @@ export class FrequentUsersService {
           where: { id: id },
           data: { status: 'DONE' },
         });
+
+        //send email
+        const user = await lastValueFrom(
+          this.userClient.send({ cmd: 'getUser' }, memberNumber),
+        );
+
+        await lastValueFrom(
+          this.emailClient.send(
+            { cmd: 'updateUser' },
+            {
+              email: user.data.email,
+              updatedData: 'Name',
+              memberNumber: memberNumber,
+            },
+          ),
+        );
 
         return { ...responses.success };
       } else {
