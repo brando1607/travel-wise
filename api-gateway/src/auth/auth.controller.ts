@@ -63,7 +63,7 @@ export class AuthController {
   }
 
   @Post('sendTemporaryPassword')
-  async sendTemporaryPassword(login: string | number): Promise<Result> {
+  async sendTemporaryPassword(@Body() login: string | number): Promise<Result> {
     try {
       const result = await this.authService.sendTemporaryPassword(login);
 
@@ -74,18 +74,14 @@ export class AuthController {
   }
 
   @Patch('changePassword')
-  @UseGuards(JwtGuard)
   async changePassword(
-    @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
     @Body() data: ChangePassword,
   ): Promise<Result> {
     try {
-      const token = req.user! as TokenData;
-      const { tempPass, newPass } = data;
-      const memberNumber = token.memberNumber;
+      const { tempPass, newPass, login } = data;
       const result = await this.authService.changePassword({
-        memberNumber,
+        login,
         tempPass,
         newPass,
       });

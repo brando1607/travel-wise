@@ -83,11 +83,11 @@ export class AuthService {
   }
 
   async changePassword({
-    memberNumber,
+    login,
     tempPass,
     newPass,
   }: {
-    memberNumber: number;
+    login: string | number;
     tempPass: string;
     newPass: string;
   }): Promise<Result> {
@@ -95,7 +95,7 @@ export class AuthService {
       const result = await lastValueFrom(
         this.AuthClient.send(
           { cmd: 'changePassword' },
-          { memberNumber, tempPass, newPass },
+          { login, tempPass, newPass },
         ),
       );
 
