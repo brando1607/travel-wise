@@ -1,10 +1,11 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { last, lastValueFrom } from 'rxjs';
+import { lastValueFrom } from 'rxjs';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Login, Response, TokenData } from './types';
 import { errors } from 'src/utils/dictionaries/errors.dictionary';
 import { RpcException } from '@nestjs/microservices';
+import { isEmail } from 'src/utils/reusable.functions';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 
@@ -132,6 +133,15 @@ export class AuthService {
     }
   }
 
+  private async removeTemporaryPasswordAndTimestamp(
+    memberNumber: number,
+  ): Promise<void> {
+    await this.db.passwords.update({
+      where: { memberNumber },
+      data: { tempPassword: null, timeStamp: null },
+    });
+  }
+
   async validateTempPassword({
     memberNumber,
     tempPass,
@@ -154,39 +164,27 @@ export class AuthService {
       )
         return { result: false };
 
-      if (Math.ceil(Date.now() / 1000 - temporaryPassword.timeStamp) > 120) {
+      if (
+        Math.ceil(Math.floor(Date.now() / 1000) - temporaryPassword.timeStamp) >
+        120
+      ) {
         //remove temporary password and timestamp
 
-        await this.db.passwords.update({
-          where: { memberNumber },
-          data: { tempPassword: null, timeStamp: null },
-        });
+        await this.removeTemporaryPasswordAndTimestamp(memberNumber);
 
-        return {
-          result: false,
-          message: 'Password expired, request a new one.',
-        };
+        throw new RpcException({
+          message: errors.badRequest.passwordExpired.message,
+          statusCode: errors.badRequest.passwordExpired.statusCode,
+        });
       }
 
-      const hashedPassword = await bcrypt.hash(tempPass, 10);
-
-      const validPassword = await bcrypt.compare(
-        hashedPassword,
-        temporaryPassword.tempPassword,
-      );
+      const validPassword = tempPass === temporaryPassword.tempPassword;
 
       if (!validPassword) {
-        //remove temporary password and timestamp
-
-        await this.db.passwords.update({
-          where: { memberNumber },
-          data: { tempPassword: null, timeStamp: null },
+        throw new RpcException({
+          message: errors.unauthorized.password.message,
+          statusCode: errors.unauthorized.password.statusCode,
         });
-
-        return {
-          result: false,
-          message: 'Invalid temporary password.',
-        };
       }
 
       const newPassword = await bcrypt.hash(newPass, 10);
@@ -198,9 +196,13 @@ export class AuthService {
         data: { password: newPassword },
       });
 
+      //remove temporary password and timestamp
+
+      await this.removeTemporaryPasswordAndTimestamp(memberNumber);
+
       return {
         result: true,
-        message: 'Password updated. You must log in again.',
+        message: 'Password updated.',
       };
     } catch (error) {
       throw error;
@@ -223,62 +225,60 @@ export class AuthService {
     }
   }
 
-  async sendTemporaryPassword(login: string | number): Promise<Response> {
+  async sendTemporaryPassword(
+    login: string | number,
+  ): Promise<Response | void> {
     try {
-      const temporaryPassword = crypto
-        .randomBytes(10)
-        .toString('hex')
-        .slice(0, 10);
+      const tempPassword = crypto.randomBytes(10).toString('hex').slice(0, 10);
 
-      const isLoginUserEmail = typeof login === 'string' ? true : false;
+      const cmd = isEmail(login['login']);
 
-      if (isLoginUserEmail) {
-        const user = await lastValueFrom(
-          this.userClient.send({ cmd: 'getUserEmail' }, login),
-        );
+      const user = await lastValueFrom(
+        this.userClient.send(cmd, login['login']),
+      );
 
-        //send email
+      //send email
 
-        await lastValueFrom(
-          this.emailClient.send(
-            { cmd: 'sendTemporaryPassword' },
-            { email: user.data.email, temporaryPassword },
-          ),
-        );
-      } else {
-        const user = await lastValueFrom(
-          this.userClient.send({ cmd: 'getUser' }, login),
-        );
+      await lastValueFrom(
+        this.emailClient.send(
+          { cmd: 'sendTemporaryPassword' },
+          { email: user.data.email, tempPassword },
+        ),
+      );
 
-        //send email
+      //store temporary password
 
-        await lastValueFrom(
-          this.emailClient.send(
-            { cmd: 'sendTemporaryPassword' },
-            { email: user.data.email, temporaryPassword },
-          ),
-        );
-      }
+      const memberNumber = user.data.memberNumber;
+      await this.db.passwords.update({
+        where: { memberNumber: memberNumber },
+        data: {
+          tempPassword: tempPassword,
+          timeStamp: Math.floor(Date.now() / 1000),
+        },
+      });
 
       return { result: true };
     } catch (error) {
-      throw error;
+      throw new RpcException({
+        message: error.message,
+        statusCode: error.statusCode,
+      });
     }
   }
 
   async changePassword({
-    memberNumber,
+    login,
     tempPass,
     newPass,
   }: {
-    memberNumber: number;
+    login: string | number;
     tempPass: string;
     newPass: string;
   }): Promise<Response> {
     try {
-      const user = await lastValueFrom(
-        this.userClient.send({ cmd: 'getUser' }, memberNumber),
-      );
+      const cmd = isEmail(login);
+
+      const user = await lastValueFrom(this.userClient.send(cmd, login));
 
       const userName = user.data.name;
 
@@ -294,7 +294,7 @@ export class AuthService {
       //update password
 
       const updatePassword = await this.validateTempPassword({
-        memberNumber,
+        memberNumber: user.data.memberNumber,
         tempPass,
         newPass,
       });
@@ -304,7 +304,11 @@ export class AuthService {
         await lastValueFrom(
           this.emailClient.send(
             { cmd: 'updateUser' },
-            { email: user.data.email, updatedData: 'Password', memberNumber },
+            {
+              email: user.data.email,
+              updatedData: 'Password',
+              memberNumber: user.data.memberNumber,
+            },
           ),
         );
       }

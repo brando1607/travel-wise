@@ -25,5 +25,9 @@ export const errors = {
       message: "Password can't include user's name",
       statusCode: 400,
     },
+    passwordExpired: {
+      message: 'Password expired. Request a new one.',
+      statusCode: 400,
+    },
   },
 };

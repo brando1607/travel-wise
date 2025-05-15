@@ -39,3 +39,7 @@ export type TokenData = {
   lastName: string;
   country: string;
 };
+
+export type isEmailFunction = {
+  cmd: string;
+};

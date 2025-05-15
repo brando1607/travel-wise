@@ -82,7 +82,9 @@ export class AuthController {
   }
 
   @MessagePattern({ cmd: 'sendTemporaryPassword' })
-  async sendTemporaryPassword(login: string | number): Promise<Response> {
+  async sendTemporaryPassword(
+    login: string | number,
+  ): Promise<Response | void> {
     try {
       const response = await this.authService.sendTemporaryPassword(login);
 
@@ -94,17 +96,17 @@ export class AuthController {
 
   @MessagePattern({ cmd: 'changePassword' })
   async changePassword({
-    memberNumber,
+    login,
     tempPass,
     newPass,
   }: {
-    memberNumber: number;
+    login: string | number;
     tempPass: string;
     newPass: string;
   }): Promise<Response> {
     try {
       const result = await this.authService.changePassword({
-        memberNumber,
+        login,
         tempPass,
         newPass,
       });
