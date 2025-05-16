@@ -65,7 +65,6 @@ export class AuthService {
     password: string;
   }): Promise<Response> {
     try {
-      const loginIsMemberNumber = typeof username === 'number';
       let validLogin = false;
       let memberNumber: number;
       let tokenData: TokenData;
