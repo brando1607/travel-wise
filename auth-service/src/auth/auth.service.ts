@@ -65,56 +65,35 @@ export class AuthService {
     password: string;
   }): Promise<Response> {
     try {
-      const loginIsMemberNumber = typeof username === 'number' ? true : false;
+      const loginIsMemberNumber = typeof username === 'number';
       let validLogin = false;
       let memberNumber: number;
       let tokenData: TokenData;
 
-      if (loginIsMemberNumber) {
-        const validMemberNumber = await lastValueFrom(
-          this.userClient.send({ cmd: 'getUser' }, username),
-        );
+      const cmd = isEmail(username);
 
-        if (validMemberNumber.statusCode === 404) {
-          return { result: validLogin, message: 'Invalid login or password' };
-        }
+      const user = await lastValueFrom(this.userClient.send(cmd, username));
 
-        memberNumber = validMemberNumber.data.memberNumber;
-
-        tokenData = {
-          memberNumber: validMemberNumber.data.memberNumber,
-          lastName: validMemberNumber.data.lastName,
-          country: validMemberNumber.data.country,
-        };
-      } else {
-        const userEmail = await lastValueFrom(
-          this.userClient.send({ cmd: 'getUserEmail' }, username),
-        );
-
-        if (userEmail.statusCode === 404) {
-          return { result: validLogin, message: 'Invalid login or password' };
-        }
-
-        memberNumber = userEmail.data.memberNumber;
-
-        tokenData = {
-          memberNumber: userEmail.data.memberNumber,
-          lastName: userEmail.data.lastName,
-          country: userEmail.data.country,
-        };
+      if (user.statusCode === 404) {
+        return { result: validLogin, message: 'Invalid login or password' };
       }
+
+      memberNumber = user.data.memberNumber;
+
+      tokenData = {
+        memberNumber: user.data.memberNumber,
+        lastName: user.data.lastName,
+        country: user.data.country,
+      };
 
       const currentPassword = await this.db.passwords.findFirst({
         select: { password: true },
         where: { memberNumber: memberNumber },
       });
 
-      if (!currentPassword)
-        return { result: false, message: 'Invalid login or password' };
-
       const validPassword = await bcrypt.compare(
         password,
-        currentPassword.password,
+        currentPassword!.password,
       );
 
       if (!validPassword) {
