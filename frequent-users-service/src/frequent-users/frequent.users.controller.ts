@@ -77,13 +77,13 @@ export class FrequentUsersController {
     }
   }
 
-  @MessagePattern({ cmd: 'accountIsBlocked' })
+  @MessagePattern({ cmd: 'isAccountBlocked' })
   async accountIsBlocked(
     memberNumber: number,
   ): Promise<PersonalizedResponse | void> {
     try {
       const result =
-        await this.frequentUsersService.accountIsBlocked(memberNumber);
+        await this.frequentUsersService.isAccountBlocked(memberNumber);
 
       return result;
     } catch (error) {

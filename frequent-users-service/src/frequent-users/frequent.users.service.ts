@@ -215,7 +215,7 @@ export class FrequentUsersService {
     }
   }
 
-  async accountIsBlocked(
+  async isAccountBlocked(
     memberNumber: number,
   ): Promise<PersonalizedResponse | void> {
     try {
@@ -224,7 +224,7 @@ export class FrequentUsersService {
         select: { status: true },
       });
 
-      if (!accountStatus!.status) {
+      if (accountStatus!.status === 'BLOCKED') {
         return {
           message: errors.forbidden.accountBlocked.message,
           statusCode: errors.forbidden.accountBlocked.statusCode,
