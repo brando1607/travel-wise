@@ -38,13 +38,13 @@ TravelWise is composed of several services working together in a microservices a
 
 Includes:
 
-Welcome email after successful registration
+- Welcome email after successful registration
 
-Temporary password email for login recovery
+- Temporary password email for login recovery
 
-Account update confirmation emails
+- Account update confirmation emails
 
-Account blocked notifications after multiple failed login attempts
+- Account blocked notifications after multiple failed login attempts
 
 ---
 
