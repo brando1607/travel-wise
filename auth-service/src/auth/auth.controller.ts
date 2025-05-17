@@ -1,7 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { MessagePattern } from '@nestjs/microservices';
-import { Login, Response } from './types';
+import { Login, Response, FailedLogins } from './types';
 
 @Controller('auth')
 export class AuthController {
@@ -110,6 +110,48 @@ export class AuthController {
         tempPass,
         newPass,
       });
+
+      return result;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @MessagePattern({ cmd: 'getFailedLogins' })
+  async getFailedLogins(memberNumber: number): Promise<FailedLogins> {
+    try {
+      const result = await this.authService.getFailedLogins(memberNumber);
+
+      return result;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @MessagePattern({ cmd: 'increaseFailedLogins' })
+  async increaseFailedLogins({
+    memberNumber,
+    failedLogins,
+  }: {
+    memberNumber: number;
+    failedLogins: number;
+  }): Promise<Response> {
+    try {
+      await this.authService.increaseFailedLogins({
+        memberNumber,
+        failedLogins,
+      });
+
+      return { result: true };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @MessagePattern({ cmd: 'resetFailedLogins' })
+  async resetFailedLogins(memberNumber: number): Promise<Response> {
+    try {
+      const result = await this.authService.resetFailedLogins(memberNumber);
 
       return result;
     } catch (error) {

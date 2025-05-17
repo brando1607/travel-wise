@@ -43,3 +43,7 @@ export type TokenData = {
 export type isEmailFunction = {
   cmd: string;
 };
+
+export type FailedLogins = {
+  attempts: number;
+};

@@ -2,7 +2,7 @@ import { Injectable, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { lastValueFrom } from 'rxjs';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { Login, Response, TokenData } from './types';
+import { Login, Response, TokenData, FailedLogins } from './types';
 import { errors } from 'src/utils/dictionaries/errors.dictionary';
 import { RpcException } from '@nestjs/microservices';
 import { isEmail } from 'src/utils/reusable.functions';
@@ -74,7 +74,11 @@ export class AuthService {
       const user = await lastValueFrom(this.userClient.send(cmd, username));
 
       if (user.statusCode === 404) {
-        return { result: validLogin, message: 'Invalid login or password' };
+        return {
+          result: validLogin,
+          message: 'Invalid login or password',
+          data: { login: 'username' },
+        };
       }
 
       memberNumber = user.data.memberNumber;
@@ -96,7 +100,11 @@ export class AuthService {
       );
 
       if (!validPassword) {
-        return { result: validLogin, message: 'Invalid login or password' };
+        return {
+          result: validLogin,
+          message: 'Invalid login or password',
+          data: { login: 'password', memberNumber },
+        };
       }
 
       validLogin = true;
@@ -295,6 +303,51 @@ export class AuthService {
         result: updatePassword.result,
         message: updatePassword.message,
       };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async getFailedLogins(memberNumber: number): Promise<FailedLogins> {
+    try {
+      const failedAttempts = await this.db.passwords.findFirst({
+        where: { memberNumber: memberNumber },
+        select: { failedLogins: true },
+      });
+
+      return { attempts: failedAttempts!.failedLogins as number };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async increaseFailedLogins({
+    memberNumber,
+    failedLogins,
+  }: {
+    memberNumber: number;
+    failedLogins: number;
+  }): Promise<Response> {
+    try {
+      await this.db.passwords.update({
+        where: { memberNumber: memberNumber },
+        data: { failedLogins: failedLogins + 1 },
+      });
+
+      return { result: true };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async resetFailedLogins(memberNumber: number): Promise<Response> {
+    try {
+      await this.db.passwords.update({
+        where: { memberNumber: memberNumber },
+        data: { failedLogins: 0 },
+      });
+
+      return { result: true };
     } catch (error) {
       throw error;
     }
