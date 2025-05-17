@@ -59,13 +59,10 @@ TravelWise is composed of several services working together in a microservices a
 
 ### Emails
 
-Nodemailer — used for sending transactional emails (welcome messages, password recovery, account updates, and security alerts)
-
-Gmail SMTP — configured as the email provider
-
-.env variables — securely manage credentials for email transport configuration
-
-Centralized NodemailerService injected into feature modules (e.g., Auth)
+- Nodemailer — used for sending transactional emails (welcome messages, password recovery, account updates, and security alerts)
+- Gmail SMTP — configured as the email provider
+- .env variables — securely manage credentials for email transport configuration
+- Centralized NodemailerService injected into feature modules (e.g., Auth)
 
 ### Security
 
