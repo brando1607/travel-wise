@@ -19,7 +19,7 @@ export class FrequentUsersService {
   constructor(
     private db: PrismaService,
     @Inject('EMAIL-SERVICE') private emailClient: ClientProxy,
-    @Inject('FREQUENT-USERS-SERVICE') private userClient: ClientProxy,
+    @Inject('AUTH-SERVICE') private authClient: ClientProxy,
   ) {}
 
   async getAllUsers(): Promise<PersonalizedResponse | void> {
@@ -193,6 +193,28 @@ export class FrequentUsersService {
     }
   }
 
+  async blockAccount(
+    memberNumber: number,
+  ): Promise<PersonalizedResponse | void> {
+    try {
+      //block account
+      await this.db.users.update({
+        where: { memberNumber: memberNumber },
+        data: { status: 'BLOCKED' },
+      });
+
+      //reset failed logins
+
+      await lastValueFrom(
+        this.authClient.send({ cmd: 'resetFailedLogins' }, memberNumber),
+      );
+
+      return { message: 'Account blocked', statusCode: 200 };
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async updateCountry({
     newCountry,
     memberNumber,
@@ -213,18 +235,19 @@ export class FrequentUsersService {
         data: { country: newCountry },
       });
 
-      const user = await lastValueFrom(
-        this.userClient.send({ cmd: 'getUser' }, memberNumber),
-      );
+      const user = await this.getUser(memberNumber);
+      // const user = await lastValueFrom(
+      //   this. .send({ cmd: 'getUser' }, memberNumber),
+      // );
 
       //send email
       await lastValueFrom(
         this.emailClient.send(
           { cmd: 'updateUser' },
           {
-            email: user.data.email,
+            email: user!.data.email,
             updatedData: 'Country',
-            memberNumber: user.data.memberNumber,
+            memberNumber: user!.data.memberNumber,
           },
         ),
       );
@@ -337,15 +360,13 @@ export class FrequentUsersService {
         });
 
         //send email
-        const user = await lastValueFrom(
-          this.userClient.send({ cmd: 'getUser' }, memberNumber),
-        );
+        const user = await this.getUser(memberNumber);
 
         await lastValueFrom(
           this.emailClient.send(
             { cmd: 'updateUser' },
             {
-              email: user.data.email,
+              email: user!.data.email,
               updatedData: 'Name',
               memberNumber: memberNumber,
             },

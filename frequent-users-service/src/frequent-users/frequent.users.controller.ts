@@ -69,6 +69,20 @@ export class FrequentUsersController {
     }
   }
 
+  @MessagePattern({ cmd: 'blockAccount' })
+  async blockAccount(
+    memberNumber: number,
+  ): Promise<PersonalizedResponse | void> {
+    try {
+      const blockAccount =
+        await this.frequentUsersService.blockAccount(memberNumber);
+
+      return blockAccount;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   @MessagePattern({ cmd: 'updateCountry' })
   async updateCountry({
     newCountry,
