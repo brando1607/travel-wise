@@ -33,6 +33,19 @@ TravelWise is composed of several services working together in a microservices a
   - User modification.
   - User deletion.
 
+- **Email Service**
+  Handles all outgoing email notifications related to user activity. Uses Nodemailer to send automated messages triggered by the Auth Service.
+
+Includes:
+
+Welcome email after successful registration
+
+Temporary password email for login recovery
+
+Account update confirmation emails
+
+Account blocked notifications after multiple failed login attempts
+
 ---
 
 ## Tech Stack
@@ -45,6 +58,16 @@ TravelWise is composed of several services working together in a microservices a
 
 - `passport-local`, `passport-jwt` — local and token-based strategies
 - `@nestjs/jwt` — JWT generation and validation
+
+### Emails
+
+Nodemailer — used for sending transactional emails (welcome messages, password recovery, account updates, and security alerts)
+
+Gmail SMTP — configured as the email provider
+
+.env variables — securely manage credentials for email transport configuration
+
+Centralized NodemailerService injected into feature modules (e.g., Auth)
 
 ### Security
 
@@ -94,23 +117,6 @@ Integration of Passport strategies for:
 GitHub login
 
 Google login
-
--- Email Notifications Service
-
-A dedicated Email Service will handle transactional emails for both users and bookings:
-
-- User Events
-  Welcome email after registration
-
-Temporary password for account recovery
-
-Password change confirmation
-
-Profile update confirmation
-
-Alert after 3 failed login attempts
-
-Account blocked notification
 
 - Booking Events
 
