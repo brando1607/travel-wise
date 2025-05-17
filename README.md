@@ -13,7 +13,8 @@ TravelWise is composed of several services working together in a microservices a
 ## Services
 
 - **API Gateway**  
-  Central entry point for client interactions. Handles routing, authentication, and request delegation to microservices.  
+  Central entry point for client interactions. Handles routing, authentication, and request delegation to microservices.
+
   Includes:
 
   - Local and JWT authentication strategies
@@ -34,7 +35,8 @@ TravelWise is composed of several services working together in a microservices a
   - User deletion.
 
 - **Email Service**  
-  Handles all outgoing email notifications related to user activity. Uses Nodemailer to send automated messages triggered by the Auth Service.  
+  Handles all outgoing email notifications related to user activity. Uses Nodemailer to send automated messages triggered by the Auth Service.
+
   Includes:
 
   - Welcome email after successful registration
