@@ -24,7 +24,7 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
       //check if account is blocked
       const accountStatus = await lastValueFrom(
         this.userClient.send(
-          { cmd: 'accountIsBlocked' },
+          { cmd: 'isAccountBlocked' },
           userLogin.data.memberNumber,
         ),
       );

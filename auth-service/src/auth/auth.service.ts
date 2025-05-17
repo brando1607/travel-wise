@@ -299,7 +299,7 @@ export class AuthService {
         //check if account needs to be reactivated
         const accountStatus = await lastValueFrom(
           this.userClient.send(
-            { cmd: 'accountIsBlocked' },
+            { cmd: 'isAccountBlocked' },
             user.data.memberNumber,
           ),
         );
