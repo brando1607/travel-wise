@@ -24,5 +24,9 @@ export const errors = {
       message: 'Name change not authorized',
       statusCode: 403,
     },
+    accountBlocked: {
+      message: 'Account is blocked. Request a new password to activate it.',
+      statusCode: 403,
+    },
   },
 };

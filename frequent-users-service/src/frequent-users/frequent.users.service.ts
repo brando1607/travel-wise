@@ -215,6 +215,44 @@ export class FrequentUsersService {
     }
   }
 
+  async accountIsBlocked(
+    memberNumber: number,
+  ): Promise<PersonalizedResponse | void> {
+    try {
+      const accountStatus = await this.db.users.findFirst({
+        where: { memberNumber: memberNumber },
+        select: { status: true },
+      });
+
+      if (!accountStatus!.status) {
+        return {
+          message: errors.forbidden.accountBlocked.message,
+          statusCode: errors.forbidden.accountBlocked.statusCode,
+        };
+      }
+      return { ...responses.noData };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async activateAccount(
+    memberNumber: number,
+  ): Promise<PersonalizedResponse | void> {
+    try {
+      //activate account
+
+      await this.db.users.update({
+        where: { memberNumber: memberNumber },
+        data: { status: 'ACTIVE' },
+      });
+
+      return { ...responses.noData };
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async updateCountry({
     newCountry,
     memberNumber,
@@ -236,9 +274,6 @@ export class FrequentUsersService {
       });
 
       const user = await this.getUser(memberNumber);
-      // const user = await lastValueFrom(
-      //   this. .send({ cmd: 'getUser' }, memberNumber),
-      // );
 
       //send email
       await lastValueFrom(

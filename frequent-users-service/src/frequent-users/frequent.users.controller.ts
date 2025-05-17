@@ -1,13 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { FrequentUsersService } from './frequent.users.service';
 import { MessagePattern } from '@nestjs/microservices';
-import {
-  UpdatedUser,
-  PersonalizedResponse,
-  NewUser,
-  NewCountry,
-  NameUpdate,
-} from './types';
+import { PersonalizedResponse, NewUser, NameUpdate } from './types';
 
 @Controller('frequent-users')
 export class FrequentUsersController {
@@ -78,6 +72,34 @@ export class FrequentUsersController {
         await this.frequentUsersService.blockAccount(memberNumber);
 
       return blockAccount;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @MessagePattern({ cmd: 'accountIsBlocked' })
+  async accountIsBlocked(
+    memberNumber: number,
+  ): Promise<PersonalizedResponse | void> {
+    try {
+      const result =
+        await this.frequentUsersService.accountIsBlocked(memberNumber);
+
+      return result;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @MessagePattern({ cmd: 'activateAccount' })
+  async activateAccount(
+    memberNumber: number,
+  ): Promise<PersonalizedResponse | void> {
+    try {
+      const result =
+        await this.frequentUsersService.activateAccount(memberNumber);
+
+      return result;
     } catch (error) {
       throw error;
     }
