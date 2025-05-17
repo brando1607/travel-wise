@@ -173,22 +173,13 @@ export class AuthService {
         });
       }
 
-      const newPassword = await bcrypt.hash(newPass, 10);
-
-      //update password
-
-      await this.db.passwords.update({
-        where: { memberNumber: memberNumber },
-        data: { password: newPassword },
-      });
-
       //remove temporary password and timestamp
 
       await this.removeTemporaryPasswordAndTimestamp(memberNumber);
 
       return {
         result: true,
-        message: 'Password updated.',
+        message: 'Temporary password valid',
       };
     } catch (error) {
       throw error;
@@ -277,8 +268,6 @@ export class AuthService {
         });
       }
 
-      //update password
-
       const updatePassword = await this.validateTempPassword({
         memberNumber: user.data.memberNumber,
         tempPass,
@@ -286,6 +275,15 @@ export class AuthService {
       });
 
       if (updatePassword.result) {
+        //update password
+
+        const newPassword = await bcrypt.hash(newPass, 10);
+
+        await this.db.passwords.update({
+          where: { memberNumber: user.data.memberNumber },
+          data: { password: newPassword },
+        });
+
         //send email
         await lastValueFrom(
           this.emailClient.send(
@@ -297,6 +295,23 @@ export class AuthService {
             },
           ),
         );
+
+        //check if account needs to be reactivated
+        const accountStatus = await lastValueFrom(
+          this.userClient.send(
+            { cmd: 'accountIsBlocked' },
+            user.data.memberNumber,
+          ),
+        );
+
+        if (accountStatus.statusCode === 403) {
+          await lastValueFrom(
+            this.userClient.send(
+              { cmd: 'activateAccount' },
+              user.data.memberNumber,
+            ),
+          );
+        }
       }
 
       return {
