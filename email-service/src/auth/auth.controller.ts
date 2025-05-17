@@ -69,4 +69,25 @@ export class AuthController {
       throw error;
     }
   }
+
+  @MessagePattern({ cmd: 'tooManyLoginAttempts' })
+  async tooManyLoginAttempts({
+    email,
+    memberNumber,
+  }: {
+    email: string;
+    updatedData: string;
+    memberNumber: number;
+  }): Promise<Result | void> {
+    try {
+      const result = await this.authService.tooManyLoginAttempts({
+        email,
+        memberNumber,
+      });
+
+      return result;
+    } catch (error) {
+      throw error;
+    }
+  }
 }

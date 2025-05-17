@@ -35,7 +35,7 @@ export class AuthService {
     tempPassword: string;
   }): Promise<Result | void> {
     try {
-      const text = `Your temporary password is ${tempPassword}. It's valid for 1 minute.`;
+      const text = `Your temporary password is ${tempPassword}. It's valid for 2 minute.`;
       const subject = 'Your temporary password.';
 
       //send temporary password
@@ -61,6 +61,26 @@ export class AuthService {
       const subject = `Account updated.`;
 
       //send confirmation
+      await this.mail.sendEmail({ email, text, subject });
+
+      return { result: true };
+    } catch (error) {
+      throw error;
+    }
+  }
+  async tooManyLoginAttempts({
+    email,
+    memberNumber,
+  }: {
+    email: string;
+    memberNumber: number;
+  }): Promise<Result | void> {
+    try {
+      const text = `Too many login attempts for account number ${memberNumber}, account blocked. If it wasn't you, please contact us.`;
+      const subject = 'Account blocked.';
+
+      //send confirmation
+
       await this.mail.sendEmail({ email, text, subject });
 
       return { result: true };
