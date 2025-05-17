@@ -84,9 +84,11 @@ TravelWise is composed of several services working together in a microservices a
 
 Each service lives in its own folder within the repository:
 
-/api-gateway
-/auth
-/frequent-users
+- /api-gateway
+- /auth
+- /frequent-users
+- /bookings
+- /emails
 
 ### Communication
 
