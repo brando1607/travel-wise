@@ -113,9 +113,9 @@ GitHub login
 
 Google login
 
-- Booking Events
+-- Booking Events
 
-  Confirmation email when a booking is created
+Confirmation email when a booking is created
 
 Notification for booking updates
 
