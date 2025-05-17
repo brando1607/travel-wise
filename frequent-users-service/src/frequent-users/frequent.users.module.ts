@@ -10,9 +10,9 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
     PrismaModule,
     ClientsModule.register([
       {
-        name: 'FREQUENT-USERS-SERVICE',
+        name: 'AUTH-SERVICE',
         transport: Transport.TCP,
-        options: { host: 'localhost', port: 8000 },
+        options: { host: 'localhost', port: 8800 },
       },
       {
         name: 'EMAIL-SERVICE',
