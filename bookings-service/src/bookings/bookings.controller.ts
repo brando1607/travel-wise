@@ -1,6 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { BookingsService } from './bookings.service';
+import { Availability } from './types';
 
 @Controller('bookings')
 export class BookingsController {
@@ -13,7 +14,7 @@ export class BookingsController {
   }: {
     origin: string;
     destination: string;
-  }): Promise<number | void> {
+  }): Promise<Availability | void> {
     try {
       const result = await this.bookingsService.getAvailabilityWithAirportCode({
         origin,
