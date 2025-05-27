@@ -13,4 +13,5 @@ export type Availability = {
   destination: string;
   departure: string;
   arrival: string;
+  duration: number;
 };

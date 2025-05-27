@@ -14,7 +14,7 @@ export class BookingsController {
   }: {
     origin: string;
     destination: string;
-  }): Promise<Availability | void> {
+  }): Promise<Availability[] | void> {
     try {
       const result = await this.bookingsService.getAvailabilityWithAirportCode({
         origin,

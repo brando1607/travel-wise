@@ -1,4 +1,184 @@
 import { Injectable } from '@nestjs/common';
+import { HttpService } from '@nestjs/axios';
+import { firstValueFrom } from 'rxjs';
+import { Coordinates, Availability } from 'src/bookings/types';
+import tzLookup from 'tz-lookup';
+import { DateTime } from 'luxon';
 
 @Injectable()
-export class BookingsService {}
+export class BookingsService {
+  private readonly googleApiKey = process.env.GOOGLE_API_KEY;
+  constructor(private readonly httpService: HttpService) {}
+
+  private calculateFlightDistance({
+    lat1,
+    lon1,
+    lat2,
+    lon2,
+  }: {
+    lat1: number;
+    lon1: number;
+    lat2: number;
+    lon2: number;
+  }): number {
+    try {
+      const toRad = (value: number) => (value * Math.PI) / 180;
+
+      const R = 6371;
+      const dLat = toRad(lat2 - lat1);
+      const dLon = toRad(lon2 - lon1);
+
+      const a =
+        Math.sin(dLat / 2) ** 2 +
+        Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return Math.ceil(R * c);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async getAirportCoordinates(code: string): Promise<Coordinates> {
+    try {
+      const url = 'https://maps.googleapis.com/maps/api/place/textsearch/json';
+
+      const response = await firstValueFrom(
+        this.httpService.get(url, {
+          params: {
+            query: `${code} airport`,
+            key: this.googleApiKey,
+          },
+        }),
+      );
+
+      const result = response.data.results[0];
+      return {
+        name: result.name,
+        location: result.geometry.location,
+      };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  calculateFlightSpeed(distance: number): number {
+    try {
+      if (distance <= 300) return 600;
+      if (distance <= 1000) return 750;
+      return 900;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  calculateTimeDifference({
+    originsCoordinates,
+    destinationsCoordinates,
+  }: {
+    originsCoordinates: Coordinates;
+    destinationsCoordinates: Coordinates;
+  }): number {
+    try {
+      const timezoneOrigin = tzLookup(
+        originsCoordinates.location.lat,
+        originsCoordinates.location.lng,
+      );
+      const timezoneDestination = tzLookup(
+        destinationsCoordinates.location.lat,
+        destinationsCoordinates.location.lng,
+      );
+
+      const originTime = DateTime.now().setZone(timezoneOrigin);
+      const destinationTime = DateTime.now().setZone(timezoneDestination);
+      const difference = Math.round(destinationTime.hour - originTime.hour);
+
+      return difference;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  getLatestDeparturetime({
+    arrivalLimit,
+    flightTime,
+    timeDifference,
+  }: {
+    arrivalLimit: number;
+    flightTime: number;
+    timeDifference: number;
+  }): number {
+    try {
+      const rawDeparture = arrivalLimit - flightTime - timeDifference;
+      return (rawDeparture + 24) % 24;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  formatTime(time: number): string {
+    try {
+      const hours = Math.floor(time);
+      const minutes = Math.round((time - hours) * 60);
+      const paddedHours = String((hours + 24) % 24).padStart(2, '0');
+      const paddedMinutes = String(minutes).padStart(2, '0');
+      return `${paddedHours}:${paddedMinutes}`;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async getAvailabilityWithAirportCode({
+    origin,
+    destination,
+  }: {
+    origin: string;
+    destination: string;
+  }): Promise<Availability[] | void> {
+    try {
+      let arrivalLimit = 19;
+      const [originsCoordinates, destinationsCoordinates] = await Promise.all([
+        this.getAirportCoordinates(origin),
+        this.getAirportCoordinates(destination),
+      ]);
+      const distance = this.calculateFlightDistance({
+        lat1: originsCoordinates.location.lat,
+        lon1: originsCoordinates.location.lng,
+        lat2: destinationsCoordinates.location.lat,
+        lon2: destinationsCoordinates.location.lng,
+      });
+      const speed = this.calculateFlightSpeed(distance);
+
+      const flightTime = Math.round((distance / speed + 0.5) * 2) / 2;
+      const timeDifference = this.calculateTimeDifference({
+        originsCoordinates,
+        destinationsCoordinates,
+      });
+
+      const latestDepartureTime = this.getLatestDeparturetime({
+        arrivalLimit,
+        flightTime,
+        timeDifference,
+      });
+
+      let availability: Availability[] = [];
+
+      for (let i = 0; i < 3; i++) {
+        const departure = latestDepartureTime - i;
+        const arrival = arrivalLimit - i;
+
+        availability.push({
+          origin,
+          destination,
+          departure: this.formatTime(departure),
+          arrival: this.formatTime(arrival),
+          duration: flightTime,
+        });
+      }
+
+      return availability;
+    } catch (error) {
+      throw error;
+    }
+  }
+}
