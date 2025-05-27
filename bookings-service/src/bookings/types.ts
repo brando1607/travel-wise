@@ -9,6 +9,7 @@ export type Itinerary = {
 };
 
 export type Availability = {
+  id: number;
   origin: string;
   destination: string;
   departure: string;

@@ -168,6 +168,7 @@ export class BookingsService {
         const arrival = arrivalLimit - i;
 
         availability.push({
+          id: i,
           origin,
           destination,
           departure: this.formatTime(departure),
