@@ -1,14 +1,19 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { Coordinates, Availability } from 'src/bookings/types';
 import tzLookup from 'tz-lookup';
 import { DateTime } from 'luxon';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import type { Cache } from 'cache-manager';
 
 @Injectable()
 export class BookingsService {
   private readonly googleApiKey = process.env.GOOGLE_API_KEY;
-  constructor(private readonly httpService: HttpService) {}
+  constructor(
+    private readonly httpService: HttpService,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+  ) {}
 
   private calculateFlightDistance({
     lat1,
@@ -136,6 +141,15 @@ export class BookingsService {
     destination: string;
   }): Promise<Availability[] | void> {
     try {
+      const cachedData = await this.cacheManager.get<Availability[]>(
+        `origin:${origin}/destination:${destination}`,
+      );
+
+      if (cachedData) {
+        console.log('cached');
+        return cachedData;
+      }
+
       let arrivalLimit = 19;
       const [originsCoordinates, destinationsCoordinates] = await Promise.all([
         this.getAirportCoordinates(origin),
@@ -176,6 +190,12 @@ export class BookingsService {
           duration: flightTime,
         });
       }
+
+      await this.cacheManager.set(
+        `origin:${origin}/destination:${destination}`,
+        availability,
+        1200000,
+      );
 
       return availability;
     } catch (error) {
