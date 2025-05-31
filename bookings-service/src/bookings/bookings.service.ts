@@ -194,7 +194,7 @@ export class BookingsService {
       await this.cacheManager.set(
         `origin:${origin}/destination:${destination}`,
         availability,
-        1200000,
+        300000,
       );
 
       return availability;
