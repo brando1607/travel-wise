@@ -35,7 +35,7 @@ TravelWise is composed of several services working together in a microservices a
   - User deletion.
 
 - **Email Service**  
-  Handles all outgoing email notifications related to user activity. Uses Nodemailer to send automated messages triggered by the Auth Service.
+  Handles all outgoing email notifications related to user activity. Uses Nodemailer to send automated messages triggered by a Service.
 
   Includes:
 
@@ -43,6 +43,13 @@ TravelWise is composed of several services working together in a microservices a
   - Temporary password email for login recovery
   - Account update confirmation emails
   - Account blocked notifications after multiple failed login attempts
+
+- **Bookings Service**  
+  Handles all the steps in the booking process.
+
+  Includes:
+
+  - Availability search with airport codes.
 
 ---
 
