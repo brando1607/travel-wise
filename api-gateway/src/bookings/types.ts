@@ -8,3 +8,5 @@ export type PersonalizedResponse = {
   statusCode?: number;
   data?: any;
 };
+
+export type Availability = { id: number } & Itinerary;
