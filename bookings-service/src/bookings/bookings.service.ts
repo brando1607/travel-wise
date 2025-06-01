@@ -1,11 +1,17 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
-import { Coordinates, Availability } from 'src/bookings/types';
+import {
+  Coordinates,
+  Availability,
+  PersonalizedResponse,
+} from 'src/bookings/types';
 import tzLookup from 'tz-lookup';
 import { DateTime } from 'luxon';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
+import { RpcException } from '@nestjs/microservices';
+import { errors } from 'src/utils/dictionaries/errors.dictionary';
 
 @Injectable()
 export class BookingsService {
@@ -198,6 +204,47 @@ export class BookingsService {
       );
 
       return availability;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async saveAvailability({
+    id,
+    origin,
+    destination,
+  }: {
+    id: number;
+    origin: string;
+    destination: string;
+  }): Promise<PersonalizedResponse | void> {
+    try {
+      const cachedData = await this.cacheManager.get<Availability[]>(
+        `origin:${origin}/destination:${destination}`,
+      );
+
+      if (!cachedData) {
+        throw new RpcException({
+          statusCode: errors.notFound.availability.statusCode,
+          message: errors.notFound.availability.message,
+        });
+      }
+
+      const availability = cachedData.filter((e) => e.id === id);
+
+      //save availability in cache for 5 minutes
+
+      await this.cacheManager.set(
+        `savedAvailability:${origin}${destination}`,
+        availability,
+        300000,
+      );
+
+      return {
+        message: 'Availability saved.',
+        statusCode: 200,
+        data: availability,
+      };
     } catch (error) {
       throw error;
     }

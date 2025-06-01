@@ -16,3 +16,9 @@ export type Availability = {
   arrival: string;
   duration: number;
 };
+
+export type PersonalizedResponse = {
+  message: string;
+  statusCode: number;
+  data?: any;
+};
