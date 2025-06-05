@@ -9,12 +9,13 @@ import {
   UseGuards,
   Res,
   Req,
+  HttpException,
 } from '@nestjs/common';
 import { Response, Request } from 'express';
 import { NewUser, UserData, TokenData, Result, ChangePassword } from './types';
 import { AuthService } from './auth.service';
 import { LocalGuard } from 'src/guards/local.guard';
-import { JwtGuard } from 'src/guards/jwt.guard';
+import { validateEmail, validateMember } from './user.schemas';
 
 @Controller('auth')
 export class AuthController {
@@ -23,6 +24,19 @@ export class AuthController {
   @Post('register')
   async register(@Body() userData: UserData): Promise<NewUser> {
     try {
+      const { email, name, lastName } = userData;
+
+      const validEmail = validateEmail({ email });
+      const validName = validateMember({ name, lastName });
+
+      if (!validEmail.success) {
+        throw new HttpException(validEmail.error.errors[0].message, 400);
+      }
+
+      if (!validName.success) {
+        throw new HttpException(validName.error.errors[0].message, 400);
+      }
+
       const result = await this.authService.register(userData);
 
       return result;
