@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { Itinerary } from './types';
 import { BookingsService } from './bookings.service';
-import { PersonalizedResponse, Availability } from './types';
+import { PersonalizedResponse, Availability, Passenger } from './types';
 
 @Controller('bookings')
 export class BookingsController {
@@ -22,12 +22,13 @@ export class BookingsController {
     try {
       const { origin, destination } = data;
 
-      const result = await this.bookingsService.getAvailabilityWithAirportCode({
-        origin,
-        destination,
-      });
+      const response =
+        await this.bookingsService.getAvailabilityWithAirportCode({
+          origin,
+          destination,
+        });
 
-      return { statusCode: 200, data: result };
+      return { statusCode: 200, data: response };
     } catch (error) {
       throw error;
     }
@@ -40,13 +41,26 @@ export class BookingsController {
     try {
       const { id, origin, destination } = data;
 
-      const result = await this.bookingsService.saveAvailability({
+      const response = await this.bookingsService.saveAvailability({
         id,
         origin,
         destination,
       });
 
-      return result;
+      return { statusCode: 200, data: response };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @Post()
+  async saveUserInfo(
+    @Body() userData: Passenger,
+  ): Promise<PersonalizedResponse | void> {
+    try {
+      const response = await this.bookingsService.saveUserInfo(userData);
+
+      return { statusCode: 200, data: response };
     } catch (error) {
       throw error;
     }
