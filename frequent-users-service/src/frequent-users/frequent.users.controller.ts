@@ -24,7 +24,9 @@ export class FrequentUsersController {
   }
 
   @MessagePattern({ cmd: 'getUsers' })
-  async getUsers(memberNumbers: number[]): Promise<PersonalInfo[] | void> {
+  async getUsers(
+    memberNumbers: number[],
+  ): Promise<PersonalInfo[] | void | PersonalizedResponse> {
     try {
       const response = await this.frequentUsersService.getUsers(memberNumbers);
 

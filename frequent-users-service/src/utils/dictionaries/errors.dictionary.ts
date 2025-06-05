@@ -2,6 +2,11 @@ export const errors = {
   notFound: {
     user: { message: 'User not found', statusCode: 404 },
     users: { message: 'No users yet', statusCode: 404 },
+    users2: {
+      message:
+        'The following users were not found. Make sure they are frequent users, otherwise just add their information manually.',
+      statusCode: 404,
+    },
     email: { message: 'Email not found', statusCode: 404 },
     changeRequest: {
       message: 'Name change request not found',
@@ -17,11 +22,6 @@ export const errors = {
     nameNotDifferent: {
       message: 'Name entered is the same as the current one',
       statusCode: 400,
-    },
-    users: {
-      message:
-        'The following users were not found. Make sure they are frequent users, otherwise just add their information manually.',
-      statusCode: 404,
     },
   },
   forbidden: {

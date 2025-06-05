@@ -38,7 +38,9 @@ export class FrequentUsersService {
     }
   }
 
-  async getUsers(memberNumbers: number[]): Promise<PersonalInfo[] | void> {
+  async getUsers(
+    memberNumbers: number[],
+  ): Promise<PersonalInfo[] | void | PersonalizedResponse> {
     try {
       const users = await this.db.users.findMany({
         where: { memberNumber: { in: memberNumbers } },
@@ -46,11 +48,11 @@ export class FrequentUsersService {
       const foundUsers = users.map((e) => e.memberNumber);
       const missingUsers = memberNumbers.filter((e) => !foundUsers.includes(e));
 
-      if (users.length !== foundUsers.length) {
-        throw new RpcException({
-          message: `${errors.notFound.users.message}: ${missingUsers}`,
-          statusCode: errors.notFound.users.statusCode,
-        });
+      if (missingUsers.length > 0) {
+        return {
+          message: `${errors.notFound.users2.message} - ${missingUsers}`,
+          statusCode: errors.notFound.users2.statusCode,
+        };
       }
 
       const result = users.map((e) => {
