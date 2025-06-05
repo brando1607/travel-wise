@@ -253,9 +253,7 @@ export class BookingsService {
     }
   }
 
-  async saveUserInfo(
-    userData: Passenger,
-  ): Promise<PersonalizedResponse | void> {
+  async saveUserInfo(userData: Passenger): Promise<PersonalizedResponse> {
     try {
       const frequentUsers = userData.passenger
         .filter((e) => e.frequentUser)
@@ -265,6 +263,13 @@ export class BookingsService {
         const getFrequentUsersData = await lastValueFrom(
           this.userClient.send({ cmd: 'getUsers' }, frequentUsers),
         );
+
+        if (getFrequentUsersData.statusCode === 404) {
+          throw new RpcException({
+            message: getFrequentUsersData.message,
+            statusCode: getFrequentUsersData.statusCode,
+          });
+        }
 
         const notFrequentUsers = userData.passenger.filter(
           (e) => !e.frequentUser,
@@ -277,15 +282,21 @@ export class BookingsService {
         };
 
         await this.cacheManager.set(`passengerInformation`, users, 300000);
+
+        return {
+          message: 'Passenger(s) saved.',
+          statusCode: 200,
+          data: users,
+        };
       } else {
         await this.cacheManager.set(`passengerInformation`, userData, 300000);
-      }
 
-      return {
-        message: 'Passenger(s) saved.',
-        statusCode: 200,
-        data: userData,
-      };
+        return {
+          message: 'Passenger(s) saved.',
+          statusCode: 200,
+          data: userData,
+        };
+      }
     } catch (error) {
       throw error;
     }
