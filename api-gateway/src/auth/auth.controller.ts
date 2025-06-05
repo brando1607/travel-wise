@@ -22,7 +22,7 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
-  async register(@Body() userData: UserData): Promise<NewUser> {
+  async register(@Body() userData: UserData): Promise<NewUser | void> {
     try {
       const { email, name, lastName } = userData;
 
