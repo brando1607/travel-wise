@@ -8,6 +8,7 @@ import { CacheModule } from '@nestjs/cache-manager';
 import { createKeyv } from '@keyv/redis';
 import { CacheableMemory } from 'cacheable';
 import { Keyv } from '@keyv/redis';
+import { ClientsModule, Transport } from '@nestjs/microservices';
 
 @Module({
   providers: [BookingsService],
@@ -38,6 +39,18 @@ import { Keyv } from '@keyv/redis';
         };
       },
     }),
+    ClientsModule.register([
+      {
+        name: 'AUTH-SERVICE',
+        transport: Transport.TCP,
+        options: { host: 'localhost', port: 8800 },
+      },
+      {
+        name: 'FREQUENT-USERS-SERVICE',
+        transport: Transport.TCP,
+        options: { host: 'localhost', port: 8000 },
+      },
+    ]),
   ],
 })
 export class BookingsModule {}
