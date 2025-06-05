@@ -15,7 +15,7 @@ import { PersonalizedResponse, Availability, Passenger } from './types';
 export class BookingsController {
   constructor(private bookingsService: BookingsService) {}
 
-  @Post()
+  @Post('getAvailabilityAC')
   async getAvailabilityWithAirportCode(
     @Body() data: Itinerary,
   ): Promise<PersonalizedResponse | void> {
@@ -34,7 +34,7 @@ export class BookingsController {
     }
   }
 
-  @Post()
+  @Post('saveAvailability')
   async saveAvailability(
     @Body() data: Availability,
   ): Promise<PersonalizedResponse | void> {
@@ -53,7 +53,7 @@ export class BookingsController {
     }
   }
 
-  @Post()
+  @Post('saveUserInfo')
   async saveUserInfo(
     @Body() userData: Passenger,
   ): Promise<PersonalizedResponse | void> {
