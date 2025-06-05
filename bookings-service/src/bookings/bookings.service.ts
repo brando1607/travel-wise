@@ -257,7 +257,9 @@ export class BookingsService {
     userData: Passenger,
   ): Promise<PersonalizedResponse | void> {
     try {
-      const frequentUsers = userData.passenger.filter((e) => e.frequentUser);
+      const frequentUsers = userData.passenger
+        .filter((e) => e.frequentUser)
+        .map((e) => e.memberNumber);
 
       if (frequentUsers.length > 0) {
         const getFrequentUsersData = await lastValueFrom(
