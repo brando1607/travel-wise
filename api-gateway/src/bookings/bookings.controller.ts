@@ -60,7 +60,7 @@ export class BookingsController {
     try {
       const response = await this.bookingsService.saveUserInfo(userData);
 
-      return { statusCode: 200, data: response };
+      return response;
     } catch (error) {
       throw error;
     }
