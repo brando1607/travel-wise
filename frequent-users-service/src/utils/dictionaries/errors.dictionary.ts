@@ -18,6 +18,11 @@ export const errors = {
       message: 'Name entered is the same as the current one',
       statusCode: 400,
     },
+    users: {
+      message:
+        'The following users were not found. Make sure they are frequent users, otherwise just add their information manually.',
+      statusCode: 404,
+    },
   },
   forbidden: {
     nameChangeNotAllowed: {

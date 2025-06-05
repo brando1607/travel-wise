@@ -27,3 +27,10 @@ export type NameUpdate = {
 export type NewCountry = {
   newCountry: string;
 };
+
+export type PersonalInfo = {
+  name: string;
+  lastName: string;
+  dateOfBirth: Date;
+  country: string;
+};

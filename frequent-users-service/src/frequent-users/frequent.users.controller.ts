@@ -1,7 +1,12 @@
 import { Controller } from '@nestjs/common';
 import { FrequentUsersService } from './frequent.users.service';
 import { MessagePattern } from '@nestjs/microservices';
-import { PersonalizedResponse, NewUser, NameUpdate } from './types';
+import {
+  PersonalizedResponse,
+  NewUser,
+  NameUpdate,
+  PersonalInfo,
+} from './types';
 
 @Controller('frequent-users')
 export class FrequentUsersController {
@@ -10,9 +15,20 @@ export class FrequentUsersController {
   @MessagePattern({ cmd: 'getAllUsers' })
   async getAllUsers(): Promise<PersonalizedResponse | void> {
     try {
-      const users = await this.frequentUsersService.getAllUsers();
+      const response = await this.frequentUsersService.getAllUsers();
 
-      return users;
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @MessagePattern({ cmd: 'getUsers' })
+  async getUsers(memberNumbers: number[]): Promise<PersonalInfo[] | void> {
+    try {
+      const response = await this.frequentUsersService.getUsers(memberNumbers);
+
+      return response;
     } catch (error) {
       throw error;
     }
@@ -21,9 +37,9 @@ export class FrequentUsersController {
   @MessagePattern({ cmd: 'getUser' })
   async getUser(memberNumber: number): Promise<PersonalizedResponse | void> {
     try {
-      const user = await this.frequentUsersService.getUser(memberNumber);
+      const response = await this.frequentUsersService.getUser(memberNumber);
 
-      return user;
+      return response;
     } catch (error) {
       throw error;
     }
@@ -32,9 +48,9 @@ export class FrequentUsersController {
   @MessagePattern({ cmd: 'getUserEmail' })
   async getUserEmail(email: string): Promise<PersonalizedResponse | void> {
     try {
-      const emailExists = await this.frequentUsersService.getUserEmail(email);
+      const response = await this.frequentUsersService.getUserEmail(email);
 
-      return emailExists;
+      return response;
     } catch (error) {
       throw error;
     }
@@ -43,9 +59,9 @@ export class FrequentUsersController {
   @MessagePattern({ cmd: 'createUser' })
   async createUser(user: NewUser): Promise<PersonalizedResponse | void> {
     try {
-      const createUser = await this.frequentUsersService.createUser(user);
+      const response = await this.frequentUsersService.createUser(user);
 
-      return createUser;
+      return response;
     } catch (error) {
       throw error;
     }
@@ -54,10 +70,9 @@ export class FrequentUsersController {
   @MessagePattern({ cmd: 'deleteUser' })
   async deleteUser(memberNumber: number): Promise<PersonalizedResponse | void> {
     try {
-      const deleteUser =
-        await this.frequentUsersService.deleteUser(memberNumber);
+      const response = await this.frequentUsersService.deleteUser(memberNumber);
 
-      return deleteUser;
+      return response;
     } catch (error) {
       throw error;
     }
@@ -68,10 +83,10 @@ export class FrequentUsersController {
     memberNumber: number,
   ): Promise<PersonalizedResponse | void> {
     try {
-      const blockAccount =
+      const response =
         await this.frequentUsersService.blockAccount(memberNumber);
 
-      return blockAccount;
+      return response;
     } catch (error) {
       throw error;
     }
@@ -82,10 +97,10 @@ export class FrequentUsersController {
     memberNumber: number,
   ): Promise<PersonalizedResponse | void> {
     try {
-      const result =
+      const response =
         await this.frequentUsersService.isAccountBlocked(memberNumber);
 
-      return result;
+      return response;
     } catch (error) {
       throw error;
     }
@@ -96,10 +111,10 @@ export class FrequentUsersController {
     memberNumber: number,
   ): Promise<PersonalizedResponse | void> {
     try {
-      const result =
+      const response =
         await this.frequentUsersService.activateAccount(memberNumber);
 
-      return result;
+      return response;
     } catch (error) {
       throw error;
     }
@@ -156,13 +171,13 @@ export class FrequentUsersController {
     accept: boolean;
   }): Promise<PersonalizedResponse | void> {
     try {
-      const handleUpdate = await this.frequentUsersService.handleNameUpdate({
+      const response = await this.frequentUsersService.handleNameUpdate({
         memberNumber,
         id,
         accept,
       });
 
-      return handleUpdate;
+      return response;
     } catch (error) {
       throw error;
     }

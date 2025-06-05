@@ -3,11 +3,10 @@ import { ClientProxy } from '@nestjs/microservices';
 import { lastValueFrom } from 'rxjs';
 import { PrismaService } from 'src/prisma/prisma.service';
 import {
-  UpdatedUser,
   NewUser,
   PersonalizedResponse,
   NameUpdate,
-  NewCountry,
+  PersonalInfo,
 } from './types';
 import { encryption } from 'src/utils/encryptAndDecrypt.function';
 import { errors } from 'src/utils/dictionaries/errors.dictionary';
@@ -34,6 +33,37 @@ export class FrequentUsersService {
       }
 
       return { ...responses.success, data: users };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async getUsers(memberNumbers: number[]): Promise<PersonalInfo[] | void> {
+    try {
+      const users = await this.db.users.findMany({
+        where: { memberNumber: { in: memberNumbers } },
+      });
+      const foundUsers = users.map((e) => e.memberNumber);
+      const missingUsers = memberNumbers.filter((e) => !foundUsers.includes(e));
+
+      if (users.length !== foundUsers.length) {
+        throw new RpcException({
+          message: `${errors.notFound.users.message}: ${missingUsers}`,
+          statusCode: errors.notFound.users.statusCode,
+        });
+      }
+
+      const result = users.map((e) => {
+        return {
+          memberNumber: e.memberNumber,
+          name: e.name,
+          lastName: e.lastName,
+          dateOfBirth: e.dateOfBirth,
+          country: e.country,
+        };
+      });
+
+      return result;
     } catch (error) {
       throw error;
     }
