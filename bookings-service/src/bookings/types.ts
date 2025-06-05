@@ -22,3 +22,18 @@ export type PersonalizedResponse = {
   statusCode: number;
   data?: any;
 };
+
+type PersonalInfo = {
+  frequentUser: boolean;
+  memberNumber: number | string;
+  name: string;
+  lastName: string;
+  dateOfBirth: string;
+  country: string;
+};
+
+export type Passenger = {
+  passenger: PersonalInfo[];
+  email: string;
+  phoneNumber: string;
+};

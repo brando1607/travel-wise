@@ -5,13 +5,15 @@ import {
   Coordinates,
   Availability,
   PersonalizedResponse,
+  Passenger,
 } from 'src/bookings/types';
 import tzLookup from 'tz-lookup';
 import { DateTime } from 'luxon';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
-import { RpcException } from '@nestjs/microservices';
+import { RpcException, ClientProxy } from '@nestjs/microservices';
 import { errors } from 'src/utils/dictionaries/errors.dictionary';
+import { lastValueFrom } from 'rxjs';
 
 @Injectable()
 export class BookingsService {
@@ -19,6 +21,7 @@ export class BookingsService {
   constructor(
     private readonly httpService: HttpService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    @Inject('FREQUENT-USERS-SERVICE') private userClient: ClientProxy,
   ) {}
 
   private calculateFlightDistance({
@@ -50,7 +53,7 @@ export class BookingsService {
     }
   }
 
-  async getAirportCoordinates(code: string): Promise<Coordinates> {
+  private async getAirportCoordinates(code: string): Promise<Coordinates> {
     try {
       const url = 'https://maps.googleapis.com/maps/api/place/textsearch/json';
 
@@ -73,7 +76,7 @@ export class BookingsService {
     }
   }
 
-  calculateFlightSpeed(distance: number): number {
+  private calculateFlightSpeed(distance: number): number {
     try {
       if (distance <= 300) return 600;
       if (distance <= 1000) return 750;
@@ -83,7 +86,7 @@ export class BookingsService {
     }
   }
 
-  calculateTimeDifference({
+  private calculateTimeDifference({
     originsCoordinates,
     destinationsCoordinates,
   }: {
@@ -110,7 +113,7 @@ export class BookingsService {
     }
   }
 
-  getLatestDeparturetime({
+  private getLatestDeparturetime({
     arrivalLimit,
     flightTime,
     timeDifference,
@@ -127,7 +130,7 @@ export class BookingsService {
     }
   }
 
-  formatTime(time: number): string {
+  private formatTime(time: number): string {
     try {
       const hours = Math.floor(time);
       const minutes = Math.round((time - hours) * 60);
@@ -244,6 +247,42 @@ export class BookingsService {
         message: 'Availability saved.',
         statusCode: 200,
         data: availability,
+      };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async saveUserInfo(
+    userData: Passenger,
+  ): Promise<PersonalizedResponse | void> {
+    try {
+      const frequentUsers = userData.passenger.filter((e) => e.frequentUser);
+
+      if (frequentUsers.length > 0) {
+        const getFrequentUsersData = await lastValueFrom(
+          this.userClient.send({ cmd: 'getUsers' }, frequentUsers),
+        );
+
+        const notFrequentUsers = userData.passenger.filter(
+          (e) => !e.frequentUser,
+        );
+
+        const users = {
+          passenger: [...getFrequentUsersData, ...notFrequentUsers],
+          email: userData.email,
+          phoneNumber: userData.phoneNumber,
+        };
+
+        await this.cacheManager.set(`passengerInformation`, users, 300000);
+      } else {
+        await this.cacheManager.set(`passengerInformation`, userData, 300000);
+      }
+
+      return {
+        message: 'Passenger(s) saved.',
+        statusCode: 200,
+        data: userData,
       };
     } catch (error) {
       throw error;

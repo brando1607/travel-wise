@@ -1,7 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { BookingsService } from './bookings.service';
-import { Availability, PersonalizedResponse } from './types';
+import { Availability, PersonalizedResponse, Passenger } from './types';
 
 @Controller('bookings')
 export class BookingsController {
@@ -16,12 +16,13 @@ export class BookingsController {
     destination: string;
   }): Promise<Availability[] | void> {
     try {
-      const result = await this.bookingsService.getAvailabilityWithAirportCode({
-        origin,
-        destination,
-      });
+      const response =
+        await this.bookingsService.getAvailabilityWithAirportCode({
+          origin,
+          destination,
+        });
 
-      return result;
+      return response;
     } catch (error) {
       throw error;
     }
@@ -43,6 +44,19 @@ export class BookingsController {
         origin,
         destination,
       });
+
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @MessagePattern({ cmd: 'saveUserInfo' })
+  async saveUserInfo(
+    userData: Passenger,
+  ): Promise<PersonalizedResponse | void> {
+    try {
+      const response = this.bookingsService.saveUserInfo(userData);
 
       return response;
     } catch (error) {
