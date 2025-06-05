@@ -42,18 +42,17 @@ enum Status {
 }
 
 model Bookings {
-  id          String      @id @default(uuid())
+  id          String   @id @default(uuid())
   passengers  Json[]
   email       String
-  origin      String
-  destination String
-  transport   Transport
-  transportId TransportId
-  date        DateTime
-  cabin       Cabin
+  phoneNumber String
+  itinerary   Json
   bookingCode String
-  status      Status      @default(PENDING)
-  createdAt   DateTime    @default(now())
+  status      Status   @default(PENDING)
+  createdAt   DateTime @default(now())
 
   @@map("bookings")
 }
+
+//itinerary json will contain: 
+//origin, destination, date, cabin, transport, transportId
