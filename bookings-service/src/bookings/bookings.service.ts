@@ -237,11 +237,7 @@ export class BookingsService {
 
       //save availability in cache for 5 minutes
 
-      await this.cacheManager.set(
-        `savedAvailability:${origin}${destination}`,
-        availability,
-        300000,
-      );
+      await this.cacheManager.set(`savedAvailability`, availability, 300000);
 
       return {
         message: 'Availability saved.',
