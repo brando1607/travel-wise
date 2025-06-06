@@ -5,14 +5,6 @@ type Member = z.infer<typeof member>;
 type Phone = z.infer<typeof phone>;
 type Email = z.infer<typeof email>;
 
-export const validateMember = (obj: Member) => {
-  try {
-    return member.safeParse(obj);
-  } catch (error) {
-    throw error;
-  }
-};
-
 export const validateMembers = (obj: Member[]) => {
   try {
     const memberArray = z.array(member);
