@@ -24,6 +24,6 @@ export const member = z.object({
     .min(2, 'Last name must be at least 3 characters long')
     .max(20, 'Last name must be at most 20 characters long')
     .regex(nameRegex, {
-      message: "Name can't have numbers or special characters.",
+      message: " Last name can't have numbers or special characters.",
     }),
 });
