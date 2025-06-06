@@ -1,6 +1,6 @@
 import z from 'zod';
 
-const nameRegex = /^[a-zA-ZÀ-ÿ\s'-]+$/;
+const nameRegex = /^[a-zA-Z\s]+$/;
 
 export const email = z.object({
   email: z.string().email({ message: 'Invalid email address.' }),

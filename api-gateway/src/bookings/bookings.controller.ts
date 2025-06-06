@@ -6,10 +6,16 @@ import {
   Delete,
   Body,
   Param,
+  HttpException,
 } from '@nestjs/common';
 import { Itinerary } from './types';
 import { BookingsService } from './bookings.service';
 import { PersonalizedResponse, Availability, Passenger } from './types';
+import {
+  validateMembers,
+  validateEmail,
+  validatePhoneNumber,
+} from './schemas/functions';
 
 @Controller('bookings')
 export class BookingsController {
@@ -58,6 +64,33 @@ export class BookingsController {
     @Body() userData: Passenger,
   ): Promise<PersonalizedResponse | void> {
     try {
+      const nonUsers = userData.passenger
+        .filter((e) => !e.frequentUser)
+        .map((e) => [{ name: e.name, lastName: e.lastName }])
+        .flat();
+
+      if (nonUsers.length > 0) {
+        const namesCheck = validateMembers(nonUsers);
+        console.log(namesCheck);
+
+        if (!namesCheck.success) {
+          throw new HttpException(namesCheck.error.errors[0].message, 400);
+        }
+      }
+
+      const emailCheck = validateEmail({ email: userData.email });
+      const phoneCheck = validatePhoneNumber({
+        phoneNumber: userData.phoneNumber,
+      });
+
+      if (!emailCheck.success) {
+        throw new HttpException(emailCheck.error.errors[0].message, 400);
+      }
+
+      if (!phoneCheck.success) {
+        throw new HttpException(phoneCheck.error.errors[0].message, 400);
+      }
+
       const response = await this.bookingsService.saveUserInfo(userData);
 
       return response;
