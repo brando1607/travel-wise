@@ -15,7 +15,7 @@ import { Response, Request } from 'express';
 import { NewUser, UserData, TokenData, Result, ChangePassword } from './types';
 import { AuthService } from './auth.service';
 import { LocalGuard } from 'src/guards/local.guard';
-import { validateEmail, validateMember } from './user.schemas';
+import { validateEmail, validateMember } from './schemas/functions';
 
 @Controller('auth')
 export class AuthController {

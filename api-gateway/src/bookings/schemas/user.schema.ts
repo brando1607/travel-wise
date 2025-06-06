@@ -1,7 +1,7 @@
 import z from 'zod';
 import parsePhoneNumberFromString from 'libphonenumber-js';
 
-const member = z.object({
+export const member = z.object({
   name: z
     .string({
       required_error: 'Name is required',
@@ -18,7 +18,7 @@ const member = z.object({
     .max(20, 'Last name must be at most 20 characters long'),
 });
 
-const phone = z.object({
+export const phone = z.object({
   phoneNumber: z.string().refine(
     (phoneNumber) => {
       const phone = parsePhoneNumberFromString(phoneNumber);
@@ -28,43 +28,6 @@ const phone = z.object({
   ),
 });
 
-const email = z.object({
+export const email = z.object({
   email: z.string().email({ message: 'Invalid email address.' }),
 });
-
-type Member = z.infer<typeof member>;
-type Phone = z.infer<typeof phone>;
-type Email = z.infer<typeof email>;
-
-export const validateMember = (obj: Member) => {
-  try {
-    return member.safeParse(obj);
-  } catch (error) {
-    throw error;
-  }
-};
-
-export const validateMembers = (obj: Member[]) => {
-  try {
-    const memberArray = z.array(member);
-    return memberArray.safeParse(obj);
-  } catch (error) {
-    throw error;
-  }
-};
-
-export const validatePhoneNumber = (obj: Phone) => {
-  try {
-    return phone.safeParse(obj);
-  } catch (error) {
-    throw error;
-  }
-};
-
-export const validateEmail = (obj: Email) => {
-  try {
-    return email.safeParse(obj);
-  } catch (error) {
-    throw error;
-  }
-};

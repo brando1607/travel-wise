@@ -1,0 +1,39 @@
+import z from 'zod';
+import { member, phone, email } from './user.schema';
+
+type Member = z.infer<typeof member>;
+type Phone = z.infer<typeof phone>;
+type Email = z.infer<typeof email>;
+
+export const validateMember = (obj: Member) => {
+  try {
+    return member.safeParse(obj);
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const validateMembers = (obj: Member[]) => {
+  try {
+    const memberArray = z.array(member);
+    return memberArray.safeParse(obj);
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const validatePhoneNumber = (obj: Phone) => {
+  try {
+    return phone.safeParse(obj);
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const validateEmail = (obj: Email) => {
+  try {
+    return email.safeParse(obj);
+  } catch (error) {
+    throw error;
+  }
+};
