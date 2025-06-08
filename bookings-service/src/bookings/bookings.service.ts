@@ -6,6 +6,7 @@ import {
   Availability,
   PersonalizedResponse,
   Passenger,
+  Booking,
 } from 'src/bookings/types';
 import tzLookup from 'tz-lookup';
 import { DateTime } from 'luxon';
@@ -14,6 +15,7 @@ import type { Cache } from 'cache-manager';
 import { RpcException, ClientProxy } from '@nestjs/microservices';
 import { errors } from 'src/utils/dictionaries/errors.dictionary';
 import { lastValueFrom } from 'rxjs';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class BookingsService {
@@ -22,6 +24,7 @@ export class BookingsService {
     private readonly httpService: HttpService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     @Inject('FREQUENT-USERS-SERVICE') private userClient: ClientProxy,
+    private db: PrismaService,
   ) {}
 
   private calculateFlightDistance({
@@ -293,6 +296,116 @@ export class BookingsService {
           data: userData,
         };
       }
+    } catch (error) {
+      throw error;
+    }
+  }
+  async bookingOverview(): Promise<Booking | void> {
+    try {
+      const availability =
+        await this.cacheManager.get<Availability>('savedAvailability');
+      const passengers = await this.cacheManager.get<Passenger>(
+        'passengerInformation',
+      );
+
+      if (!availability) {
+        throw new RpcException({
+          statusCode: errors.notFound.availability.statusCode,
+          message: errors.notFound.availability.message,
+        });
+      }
+
+      if (!passengers) {
+        throw new RpcException({
+          statusCode: errors.notFound.passengerInfo.statusCode,
+          message: errors.notFound.passengerInfo.message,
+        });
+      }
+
+      const booking = {
+        availability,
+        passengers,
+      };
+
+      //save booking in cache
+
+      await this.cacheManager.set('bookingOverview', booking, 300000);
+
+      return booking;
+    } catch (error) {
+      throw error;
+    }
+  }
+  async createBooking(): Promise<PersonalizedResponse | void> {
+    try {
+      //generate booking reference
+      const characters = '23456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      let bookingCode = '';
+      let newBookingCode = false;
+
+      const bookingData =
+        await this.cacheManager.get<Booking>('bookingOverview');
+
+      if (!bookingData) {
+        throw new RpcException({
+          statusCode: errors.notFound.booking.statusCode,
+          message: errors.notFound.booking.message,
+        });
+      }
+
+      while (!newBookingCode) {
+        bookingCode = '';
+
+        for (let i = 0; i < 6; i++) {
+          const randomIndex = Math.floor(Math.random() * characters.length);
+
+          bookingCode += characters[randomIndex];
+        }
+
+        const checkBookingCode = await this.db.bookings.findFirst({
+          where: { bookingCode: bookingCode },
+        });
+
+        if (!checkBookingCode) {
+          newBookingCode = true;
+        }
+      }
+
+      const booking = {
+        passengers: bookingData.passengers.passenger,
+        email: bookingData.passengers.email,
+        phoneNumber: bookingData.passengers.phoneNumber,
+        itinerary: bookingData.availability,
+        bookingCode,
+      };
+
+      //add booking to db
+      await this.db.bookings.create({ data: booking });
+
+      return {
+        message: `Booking created under code ${bookingCode}`,
+        statusCode: 200,
+      };
+    } catch (error) {
+      throw error;
+    }
+  }
+  async getBookings(): Promise<PersonalizedResponse | void> {
+    try {
+      const currentBookings = await this.db.bookings.findMany();
+
+      if (!currentBookings) {
+        throw new RpcException({
+          statusCode: errors.notFound.bookings.statusCode,
+          message: errors.notFound.bookings.message,
+        });
+      }
+
+      return {
+        message: 'Bookings retrieved',
+        statusCode: 200,
+        data: currentBookings,
+      };
     } catch (error) {
       throw error;
     }

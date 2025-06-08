@@ -10,7 +10,12 @@ import {
 } from '@nestjs/common';
 import { Itinerary } from './types';
 import { BookingsService } from './bookings.service';
-import { PersonalizedResponse, Availability, Passenger } from './types';
+import {
+  PersonalizedResponse,
+  Availability,
+  Passenger,
+  Booking,
+} from './types';
 import {
   validateMembers,
   validateEmail,
@@ -71,7 +76,6 @@ export class BookingsController {
 
       if (nonUsers.length > 0) {
         const namesCheck = validateMembers(nonUsers);
-        console.log(namesCheck);
 
         if (!namesCheck.success) {
           throw new HttpException(namesCheck.error.errors[0].message, 400);
@@ -92,6 +96,39 @@ export class BookingsController {
       }
 
       const response = await this.bookingsService.saveUserInfo(userData);
+
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @Get('bookingOverview')
+  async bookingOverview(): Promise<PersonalizedResponse | void> {
+    try {
+      const response = await this.bookingsService.bookingOverview();
+
+      return { statusCode: 200, data: response };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @Get('createBooking')
+  async createBooking(): Promise<PersonalizedResponse | void> {
+    try {
+      const response = await this.bookingsService.createBooking();
+
+      return { statusCode: 200, data: response };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @Get('getBookings')
+  async getBookings(): Promise<PersonalizedResponse | void> {
+    try {
+      const response = await this.bookingsService.getBookings();
 
       return response;
     } catch (error) {
