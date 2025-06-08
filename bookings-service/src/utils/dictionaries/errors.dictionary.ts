@@ -6,7 +6,15 @@ export const errors = {
     },
     passengerInfo: {
       message: 'No passenger information saved, please add it again.',
-      statusCode: 400,
+      statusCode: 404,
+    },
+    booking: {
+      message: 'Booking expired, please start over.',
+      statusCode: 404,
+    },
+    bookings: {
+      message: 'No bookings yet',
+      statusCode: 404,
     },
   },
 };
