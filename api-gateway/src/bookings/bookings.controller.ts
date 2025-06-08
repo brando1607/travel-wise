@@ -39,7 +39,7 @@ export class BookingsController {
           destination,
         });
 
-      return { statusCode: 200, data: response };
+      return response;
     } catch (error) {
       throw error;
     }
@@ -58,7 +58,7 @@ export class BookingsController {
         destination,
       });
 
-      return { statusCode: 200, data: response };
+      return response;
     } catch (error) {
       throw error;
     }
@@ -108,7 +108,7 @@ export class BookingsController {
     try {
       const response = await this.bookingsService.bookingOverview();
 
-      return { statusCode: 200, data: response };
+      return response;
     } catch (error) {
       throw error;
     }
@@ -119,7 +119,7 @@ export class BookingsController {
     try {
       const response = await this.bookingsService.createBooking();
 
-      return { statusCode: 200, data: response };
+      return response;
     } catch (error) {
       throw error;
     }

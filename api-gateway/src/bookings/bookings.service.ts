@@ -13,7 +13,7 @@ export class BookingsService {
   }: {
     origin: string;
     destination: string;
-  }): Promise<number | void> {
+  }): Promise<PersonalizedResponse | void> {
     try {
       const response = await lastValueFrom(
         this.bookingClient.send(
@@ -65,7 +65,7 @@ export class BookingsService {
     }
   }
 
-  async bookingOverview(): Promise<Booking | void> {
+  async bookingOverview(): Promise<PersonalizedResponse | void> {
     try {
       const response = await lastValueFrom(
         this.bookingClient.send({ cmd: 'bookingOverview' }, {}),

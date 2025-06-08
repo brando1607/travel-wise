@@ -151,7 +151,7 @@ export class BookingsService {
   }: {
     origin: string;
     destination: string;
-  }): Promise<Availability[] | void> {
+  }): Promise<PersonalizedResponse | void> {
     try {
       const cachedData = await this.cacheManager.get<Availability[]>(
         `origin:${origin}/destination:${destination}`,
@@ -159,7 +159,7 @@ export class BookingsService {
 
       if (cachedData) {
         console.log('cached');
-        return cachedData;
+        return { message: 'Availability', statusCode: 200, data: cachedData };
       }
 
       let arrivalLimit = 19;
@@ -209,7 +209,7 @@ export class BookingsService {
         300000,
       );
 
-      return availability;
+      return { message: 'Availability', statusCode: 200, data: availability };
     } catch (error) {
       throw error;
     }
@@ -300,7 +300,7 @@ export class BookingsService {
       throw error;
     }
   }
-  async bookingOverview(): Promise<Booking | void> {
+  async bookingOverview(): Promise<PersonalizedResponse | void> {
     try {
       const availability =
         await this.cacheManager.get<Availability>('savedAvailability');
@@ -331,7 +331,7 @@ export class BookingsService {
 
       await this.cacheManager.set('bookingOverview', booking, 300000);
 
-      return booking;
+      return { message: 'Booking Overview', statusCode: 200, data: booking };
     } catch (error) {
       throw error;
     }

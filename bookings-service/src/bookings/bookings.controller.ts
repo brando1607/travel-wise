@@ -19,7 +19,7 @@ export class BookingsController {
   }: {
     origin: string;
     destination: string;
-  }): Promise<Availability[] | void> {
+  }): Promise<PersonalizedResponse | void> {
     try {
       const response =
         await this.bookingsService.getAvailabilityWithAirportCode({
@@ -69,7 +69,7 @@ export class BookingsController {
     }
   }
   @MessagePattern({ cmd: 'bookingOverview' })
-  async bookingOverview(): Promise<Booking | void> {
+  async bookingOverview(): Promise<PersonalizedResponse | void> {
     try {
       const response = this.bookingsService.bookingOverview();
 
