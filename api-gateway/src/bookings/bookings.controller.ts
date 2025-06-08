@@ -10,12 +10,7 @@ import {
 } from '@nestjs/common';
 import { Itinerary } from './types';
 import { BookingsService } from './bookings.service';
-import {
-  PersonalizedResponse,
-  Availability,
-  Passenger,
-  Booking,
-} from './types';
+import { PersonalizedResponse, Availability, Passenger } from './types';
 import {
   validateMembers,
   validateEmail,

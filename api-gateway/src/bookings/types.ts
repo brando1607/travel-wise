@@ -25,8 +25,3 @@ export type Passenger = {
   email: string;
   phoneNumber: string;
 };
-
-export type Booking = {
-  availability: Availability;
-  passengers: Passenger;
-};

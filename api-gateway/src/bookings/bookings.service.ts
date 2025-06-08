@@ -1,7 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { lastValueFrom } from 'rxjs';
-import { PersonalizedResponse, Passenger, Booking } from './types';
+import { PersonalizedResponse, Passenger } from './types';
 
 @Injectable()
 export class BookingsService {

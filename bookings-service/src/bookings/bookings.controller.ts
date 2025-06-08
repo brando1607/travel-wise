@@ -1,12 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { BookingsService } from './bookings.service';
-import {
-  Availability,
-  PersonalizedResponse,
-  Passenger,
-  Booking,
-} from './types';
+import { PersonalizedResponse, Passenger } from './types';
 
 @Controller('bookings')
 export class BookingsController {
