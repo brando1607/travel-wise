@@ -93,4 +93,17 @@ export class BookingsController {
       throw error;
     }
   }
+  @MessagePattern({ cmd: 'getBooking' })
+  async getBooking(payload: {
+    code: string;
+  }): Promise<PersonalizedResponse | void> {
+    try {
+      const { code } = payload;
+      const response = await this.bookingsService.getBooking(code);
+
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  }
 }

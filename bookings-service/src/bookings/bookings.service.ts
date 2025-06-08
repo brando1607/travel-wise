@@ -410,4 +410,23 @@ export class BookingsService {
       throw error;
     }
   }
+
+  async getBooking(code: string): Promise<PersonalizedResponse | void> {
+    try {
+      const booking = await this.db.bookings.findFirst({
+        where: { bookingCode: code },
+      });
+
+      if (!booking) {
+        throw new RpcException({
+          statusCode: errors.notFound.bookingCode.statusCode,
+          message: errors.notFound.bookingCode.message,
+        });
+      }
+
+      return { message: 'Booking found.', statusCode: 200, data: booking };
+    } catch (error) {
+      throw error;
+    }
+  }
 }

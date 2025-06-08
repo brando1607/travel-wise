@@ -16,5 +16,9 @@ export const errors = {
       message: 'No bookings yet',
       statusCode: 404,
     },
+    bookingCode: {
+      message: 'Booking not found.',
+      statusCode: 404,
+    },
   },
 };

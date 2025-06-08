@@ -130,4 +130,17 @@ export class BookingsController {
       throw error;
     }
   }
+
+  @Get('getBooking/:code')
+  async getBooking(
+    @Param() code: string,
+  ): Promise<PersonalizedResponse | void> {
+    try {
+      const response = await this.bookingsService.getBooking(code);
+
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  }
 }

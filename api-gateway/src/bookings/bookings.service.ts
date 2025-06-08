@@ -100,4 +100,15 @@ export class BookingsService {
       throw error;
     }
   }
+  async getBooking(code: string): Promise<PersonalizedResponse | void> {
+    try {
+      const response = await lastValueFrom(
+        this.bookingClient.send({ cmd: 'getBooking' }, code),
+      );
+
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  }
 }
