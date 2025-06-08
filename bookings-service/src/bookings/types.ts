@@ -24,7 +24,7 @@ export type PersonalizedResponse = {
 };
 
 type PersonalInfo = {
-  frequentUser: boolean;
+  frequentUser?: boolean;
   memberNumber: number | string;
   name: string;
   lastName: string;
@@ -36,4 +36,9 @@ export type Passenger = {
   passenger: PersonalInfo[];
   email: string;
   phoneNumber: string;
+};
+
+export type Booking = {
+  availability: Availability;
+  passengers: Passenger;
 };
