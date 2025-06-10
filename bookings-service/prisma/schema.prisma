@@ -13,26 +13,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Transport {
-  CAR
-  PLANE
-  TRAIN
-  BUS
-}
-
-enum TransportId {
-  FLIGHTNUMBER
-  PLATENUMBER
-  BUSNUMBER
-  TRAINNUMBER
-}
-
-enum Cabin {
-  ECONOMY
-  PREMIUM
-  BUSINESS
-}
-
 enum Status {
   ACTIVE
   EXPIRED
