@@ -13,11 +13,6 @@ import { AuthService } from './auth.service';
         transport: Transport.TCP,
         options: { host: 'localhost', port: 8800 },
       },
-      {
-        name: 'FREQUENT-USERS-SERVICE',
-        transport: Transport.TCP,
-        options: { host: 'localhost', port: 8000 },
-      },
     ]),
   ],
   controllers: [AuthController],
