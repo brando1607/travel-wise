@@ -11,15 +11,21 @@ export class BookingsController {
   async getAvailabilityWithAirportCode({
     origin,
     destination,
+    fare,
+    cabin,
   }: {
     origin: string;
     destination: string;
+    fare: number;
+    cabin: string;
   }): Promise<PersonalizedResponse | void> {
     try {
       const response =
         await this.bookingsService.getAvailabilityWithAirportCode({
           origin,
           destination,
+          fare,
+          cabin,
         });
 
       return response;

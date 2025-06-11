@@ -148,17 +148,20 @@ export class BookingsService {
   async getAvailabilityWithAirportCode({
     origin,
     destination,
+    fare,
+    cabin,
   }: {
     origin: string;
     destination: string;
+    fare: number;
+    cabin: string;
   }): Promise<PersonalizedResponse | void> {
     try {
       const cachedData = await this.cacheManager.get<Availability[]>(
-        `origin:${origin}/destination:${destination}`,
+        `origin:${origin}/destination:${destination}/cabin:${cabin}`,
       );
 
       if (cachedData) {
-        console.log('cached');
         return { message: 'Availability', statusCode: 200, data: cachedData };
       }
 
@@ -173,6 +176,7 @@ export class BookingsService {
         lat2: destinationsCoordinates.location.lat,
         lon2: destinationsCoordinates.location.lng,
       });
+
       const speed = this.calculateFlightSpeed(distance);
 
       const flightTime = Math.round((distance / speed + 0.5) * 2) / 2;
@@ -192,19 +196,28 @@ export class BookingsService {
       for (let i = 0; i < 3; i++) {
         const departure = latestDepartureTime - i;
         const arrival = arrivalLimit - i;
+        let priceIncrease = 1;
+
+        if (i === 1) {
+          priceIncrease = 1.15;
+        } else if (i === 2) {
+          priceIncrease = 1.25;
+        }
 
         availability.push({
-          id: i,
+          transportId: i,
           origin,
           destination,
           departure: this.formatTime(departure),
           arrival: this.formatTime(arrival),
           duration: flightTime,
+          cabin: cabin,
+          price: `${Math.ceil(distance * fare * priceIncrease)} USD`,
         });
       }
 
       await this.cacheManager.set(
-        `origin:${origin}/destination:${destination}`,
+        `origin:${origin}/destination:${destination}/cabin:${cabin}`,
         availability,
         300000,
       );
@@ -236,7 +249,7 @@ export class BookingsService {
         });
       }
 
-      const availability = cachedData.filter((e) => e.id === id);
+      const availability = cachedData.filter((e) => e.transportId === id);
 
       //save availability in cache for 5 minutes
 

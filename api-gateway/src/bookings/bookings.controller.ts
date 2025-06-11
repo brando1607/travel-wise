@@ -15,6 +15,7 @@ import {
   validateMembers,
   validateEmail,
   validatePhoneNumber,
+  validateCabin,
 } from './schemas/functions';
 
 @Controller('bookings')
@@ -26,12 +27,29 @@ export class BookingsController {
     @Body() data: Itinerary,
   ): Promise<PersonalizedResponse | void> {
     try {
-      const { origin, destination } = data;
+      const { origin, destination, cabin } = data;
+      let fare: number;
+
+      const checkCabin = validateCabin({ cabin });
+
+      if (!checkCabin.success) {
+        throw new HttpException(checkCabin.error.errors[0].message, 400);
+      }
+
+      if (cabin === 'economy') {
+        fare = 0.05;
+      } else if (cabin === 'premium') {
+        fare = 0.09;
+      } else {
+        fare = 0.14;
+      }
 
       const response =
         await this.bookingsService.getAvailabilityWithAirportCode({
           origin,
           destination,
+          fare,
+          cabin,
         });
 
       return response;

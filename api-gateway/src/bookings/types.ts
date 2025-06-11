@@ -1,6 +1,7 @@
 export type Itinerary = {
   origin: string;
   destination: string;
+  cabin: 'economy' | 'premium' | 'business';
 };
 
 export type PersonalizedResponse = {

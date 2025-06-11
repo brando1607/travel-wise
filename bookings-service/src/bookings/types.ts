@@ -9,12 +9,14 @@ export type Itinerary = {
 };
 
 export type Availability = {
-  id: number;
+  transportId: number;
   origin: string;
   destination: string;
   departure: string;
   arrival: string;
   duration: number;
+  cabin: string;
+  price: string;
 };
 
 export type PersonalizedResponse = {

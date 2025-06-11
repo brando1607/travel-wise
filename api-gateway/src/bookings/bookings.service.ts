@@ -10,15 +10,19 @@ export class BookingsService {
   async getAvailabilityWithAirportCode({
     origin,
     destination,
+    fare,
+    cabin,
   }: {
     origin: string;
     destination: string;
+    fare: number;
+    cabin: string;
   }): Promise<PersonalizedResponse | void> {
     try {
       const response = await lastValueFrom(
         this.bookingClient.send(
           { cmd: 'getAvailabilityWithAirportCode' },
-          { origin, destination },
+          { origin, destination, fare, cabin },
         ),
       );
 

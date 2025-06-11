@@ -37,3 +37,9 @@ export const phone = z.object({
 export const email = z.object({
   email: z.string().email({ message: 'Invalid email address.' }),
 });
+
+export const cabin = z.object({
+  cabin: z.enum(['economy', 'premium', 'business'], {
+    message: 'Cabin must be economy, premium or business',
+  }),
+});
