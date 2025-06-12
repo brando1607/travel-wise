@@ -24,6 +24,7 @@ export class BookingsService {
     private readonly httpService: HttpService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     @Inject('FREQUENT-USERS-SERVICE') private userClient: ClientProxy,
+    @Inject('EMAIL-SERVICE') private emailClient: ClientProxy,
     private db: PrismaService,
   ) {}
 
@@ -232,14 +233,16 @@ export class BookingsService {
     id,
     origin,
     destination,
+    cabin,
   }: {
     id: number;
     origin: string;
     destination: string;
+    cabin: string;
   }): Promise<PersonalizedResponse | void> {
     try {
       const cachedData = await this.cacheManager.get<Availability[]>(
-        `origin:${origin}/destination:${destination}`,
+        `origin:${origin}/destination:${destination}/cabin:${cabin}`,
       );
 
       if (!cachedData) {
@@ -394,6 +397,12 @@ export class BookingsService {
 
       //add booking to db
       await this.db.bookings.create({ data: booking });
+
+      //send email with booking
+
+      await lastValueFrom(
+        this.emailClient.send({ cmd: 'bookingCreated' }, booking),
+      );
 
       return {
         message: `Booking created under code ${bookingCode}`,

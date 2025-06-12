@@ -39,16 +39,19 @@ export class BookingsController {
     id,
     origin,
     destination,
+    cabin,
   }: {
     id: number;
     origin: string;
     destination: string;
+    cabin: string;
   }): Promise<PersonalizedResponse | void> {
     try {
       const response = this.bookingsService.saveAvailability({
         id,
         origin,
         destination,
+        cabin,
       });
 
       return response;
