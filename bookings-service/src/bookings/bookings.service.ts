@@ -396,12 +396,12 @@ export class BookingsService {
       };
 
       //add booking to db
-      await this.db.bookings.create({ data: booking });
+      const newBooking = await this.db.bookings.create({ data: booking });
 
       //send email with booking
 
       await lastValueFrom(
-        this.emailClient.send({ cmd: 'bookingCreated' }, booking),
+        this.emailClient.send({ cmd: 'bookingCreated' }, newBooking),
       );
 
       return {
