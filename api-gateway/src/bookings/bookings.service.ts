@@ -36,16 +36,18 @@ export class BookingsService {
     id,
     origin,
     destination,
+    cabin,
   }: {
     id: number;
     origin: string;
     destination: string;
+    cabin: string;
   }): Promise<PersonalizedResponse | void> {
     try {
       const response = await lastValueFrom(
         this.bookingClient.send(
           { cmd: 'saveAvailability' },
-          { id, origin, destination },
+          { id, origin, destination, cabin },
         ),
       );
 

@@ -63,12 +63,13 @@ export class BookingsController {
     @Body() data: Availability,
   ): Promise<PersonalizedResponse | void> {
     try {
-      const { id, origin, destination } = data;
+      const { id, origin, destination, cabin } = data;
 
       const response = await this.bookingsService.saveAvailability({
         id,
         origin,
         destination,
+        cabin,
       });
 
       return response;
