@@ -13,7 +13,6 @@ export class BookingsService {
           const dob = p.dateOfBirth.slice(0, 10);
           let memberNumber =
             p.memberNumber === 'undefined' ? 'Not a member' : p.memberNumber;
-          console.log(memberNumber);
 
           return `Passenger ${index + 1}:
                   Name: ${p.name} ${p.lastName}
