@@ -84,6 +84,7 @@ TravelWise is composed of several services working together in a microservices a
 ### Database
 
 - **Prisma ORM** with PostgreSQL — used in `auth`, `bookings`, and `frequent-users` services.
+- **Redis** - used in the `bookings` service to cache data entered during booking process.
 
 ## Architecture
 
@@ -152,13 +153,3 @@ Places API — to get latitude and longitude from location names
 Distance Matrix API — to calculate distances and travel durations
 
 This module is still under active design and development.
-
--- Caching & Optimization
-
-Redis will be used for:
-
-Caching frequently accessed data
-
-Rate limiting and temporary state tracking
-
-Caching data entered during booking process
