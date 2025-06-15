@@ -19,11 +19,6 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
         options: { host: 'localhost', port: 8000 },
       },
       {
-        name: 'EMAIL-SERVICE',
-        transport: Transport.TCP,
-        options: { host: 'localhost', port: 8300 },
-      },
-      {
         name: 'BOOKINGS-SERVICE',
         transport: Transport.TCP,
         options: { host: 'localhost', port: 8080 },

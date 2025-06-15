@@ -52,8 +52,12 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
       },
       {
         name: 'EMAIL-SERVICE',
-        transport: Transport.TCP,
-        options: { host: 'localhost', port: 8300 },
+        transport: Transport.RMQ,
+        options: {
+          urls: ['amqp://localhost'],
+          queue: 'email_queue',
+          queueOptions: { durable: true },
+        },
       },
     ]),
   ],
