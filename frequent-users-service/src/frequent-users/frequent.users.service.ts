@@ -7,6 +7,7 @@ import {
   PersonalizedResponse,
   NameUpdate,
   PersonalInfo,
+  AddBookingCode,
 } from './types';
 import { encryption } from 'src/utils/encryptAndDecrypt.function';
 import { errors } from 'src/utils/dictionaries/errors.dictionary';
@@ -451,6 +452,35 @@ export class FrequentUsersService {
 
         return { ...errors.forbidden.nameChangeNotAllowed };
       }
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async addBookingCodeInFrequentUser(
+    data: AddBookingCode,
+  ): Promise<PersonalizedResponse | void> {
+    try {
+      const { bookingCode, frequentUsers } = data;
+
+      //get current bookings and update
+      for (let i = 0; i < frequentUsers.length; i++) {
+        let currentUser = frequentUsers[i];
+
+        let getBookings = await this.db.users.findFirst({
+          where: { memberNumber: currentUser },
+          select: { bookings: true },
+        });
+
+        const currentBookings = getBookings?.bookings ?? [];
+
+        await this.db.users.update({
+          where: { memberNumber: currentUser },
+          data: { bookings: [...currentBookings, bookingCode] },
+        });
+      }
+
+      return { message: 'Booking added.', statusCode: 200 };
     } catch (error) {
       throw error;
     }

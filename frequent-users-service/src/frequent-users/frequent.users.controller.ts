@@ -6,6 +6,7 @@ import {
   NewUser,
   NameUpdate,
   PersonalInfo,
+  AddBookingCode,
 } from './types';
 
 @Controller('frequent-users')
@@ -178,6 +179,20 @@ export class FrequentUsersController {
         id,
         accept,
       });
+
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @MessagePattern({ cmd: 'addBookingCodeInFrequentUser' })
+  async addBookingCodeInFrequentUser(
+    data: AddBookingCode,
+  ): Promise<PersonalizedResponse | void> {
+    try {
+      const response =
+        await this.frequentUsersService.addBookingCodeInFrequentUser(data);
 
       return response;
     } catch (error) {

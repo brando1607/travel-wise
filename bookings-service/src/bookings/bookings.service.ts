@@ -395,10 +395,28 @@ export class BookingsService {
         bookingCode,
       };
 
-      //add booking to db
+      //check if there are frequent users
+      const frequentUsers = booking.passengers
+        .filter((e) => typeof e.memberNumber === 'number')
+        .map((e) => e.memberNumber);
+
+      if (frequentUsers.length > 0) {
+        //add booking to frequent user
+
+        const data = {
+          bookingCode,
+          frequentUsers,
+        };
+
+        await lastValueFrom(
+          this.userClient.send({ cmd: 'addBookingCodeInFrequentUser' }, data),
+        );
+      }
+
+      // add booking to db
       const newBooking = await this.db.bookings.create({ data: booking });
 
-      //send email with booking
+      // send email with booking
 
       await lastValueFrom(
         this.emailClient.send({ cmd: 'bookingCreated' }, newBooking),
