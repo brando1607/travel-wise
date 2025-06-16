@@ -434,7 +434,7 @@ export class BookingsService {
     try {
       const currentBookings = await this.db.bookings.findMany();
 
-      if (!currentBookings) {
+      if (currentBookings.length < 1) {
         throw new RpcException({
           statusCode: errors.notFound.bookings.statusCode,
           message: errors.notFound.bookings.message,
