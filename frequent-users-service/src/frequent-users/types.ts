@@ -34,3 +34,8 @@ export type PersonalInfo = {
   dateOfBirth: Date;
   country: string;
 };
+
+export type AddBookingCode = {
+  bookingCode: string;
+  frequentUsers: number[];
+};
