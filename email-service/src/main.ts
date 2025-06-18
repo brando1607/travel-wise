@@ -13,7 +13,7 @@ async function bootstrap() {
     },
   });
 
-  app.startAllMicroservices();
+  await app.startAllMicroservices();
   console.log(`Email service connected to RabbitMQ`);
 }
 bootstrap();
