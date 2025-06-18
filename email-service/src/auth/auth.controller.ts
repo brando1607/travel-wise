@@ -1,7 +1,6 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { AuthService } from './auth.service';
-import { Result } from './types';
 
 @Controller('auth')
 export class AuthController {
@@ -14,14 +13,12 @@ export class AuthController {
   }: {
     email: string;
     memberNumber: number;
-  }): Promise<Result | void> {
+  }): Promise<void> {
     try {
-      const result = await this.authService.welcomeEmail({
+      await this.authService.welcomeEmail({
         email,
         memberNumber,
       });
-
-      return result;
     } catch (error) {
       throw error;
     }
@@ -34,14 +31,12 @@ export class AuthController {
   }: {
     email: string;
     tempPassword: string;
-  }): Promise<Result | void> {
+  }): Promise<void> {
     try {
-      const result = await this.authService.sendTemporaryPassword({
+      await this.authService.sendTemporaryPassword({
         email,
         tempPassword,
       });
-
-      return result;
     } catch (error) {
       throw error;
     }
@@ -56,15 +51,13 @@ export class AuthController {
     email: string;
     updatedData: string;
     memberNumber: number;
-  }): Promise<Result | void> {
+  }): Promise<void> {
     try {
-      const result = await this.authService.updateUser({
+      await this.authService.updateUser({
         email,
         updatedData,
         memberNumber,
       });
-
-      return result;
     } catch (error) {
       throw error;
     }
@@ -78,14 +71,12 @@ export class AuthController {
     email: string;
     updatedData: string;
     memberNumber: number;
-  }): Promise<Result | void> {
+  }): Promise<void> {
     try {
-      const result = await this.authService.tooManyLoginAttempts({
+      await this.authService.tooManyLoginAttempts({
         email,
         memberNumber,
       });
-
-      return result;
     } catch (error) {
       throw error;
     }

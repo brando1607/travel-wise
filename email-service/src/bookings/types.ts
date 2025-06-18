@@ -1,5 +1,3 @@
-export type Result = { result: boolean };
-
 type Availability = {
   transportId: number;
   origin: string;

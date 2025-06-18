@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { NodemailerService } from 'src/nodemailer/nodemailer.service';
-import { Result, Booking } from './types';
+import { Booking } from './types';
 
 @Injectable()
 export class BookingsService {
   constructor(private readonly mail: NodemailerService) {}
 
-  async bookingCreated(booking: Booking): Promise<Result | void> {
+  async bookingCreated(booking: Booking): Promise<void> {
     try {
       const passengers = booking.passengers
         .map((p, index) => {
@@ -62,8 +62,6 @@ export class BookingsService {
       //send email
 
       await this.mail.sendEmail({ email: booking.email, text, subject });
-
-      return { result: true };
     } catch (error) {
       throw error;
     }

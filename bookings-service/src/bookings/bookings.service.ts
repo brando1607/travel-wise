@@ -419,7 +419,7 @@ export class BookingsService {
       // send email with booking
 
       await lastValueFrom(
-        this.emailClient.send({ cmd: 'bookingCreated' }, newBooking),
+        this.emailClient.emit({ cmd: 'bookingCreated' }, newBooking),
       );
 
       return {

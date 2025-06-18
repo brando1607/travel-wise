@@ -310,7 +310,7 @@ export class FrequentUsersService {
 
       //send email
       await lastValueFrom(
-        this.emailClient.send(
+        this.emailClient.emit(
           { cmd: 'updateUser' },
           {
             email: user!.data.email,
@@ -431,7 +431,7 @@ export class FrequentUsersService {
         const user = await this.getUser(memberNumber);
 
         await lastValueFrom(
-          this.emailClient.send(
+          this.emailClient.emit(
             { cmd: 'updateUser' },
             {
               email: user!.data.email,

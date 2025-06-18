@@ -217,7 +217,7 @@ export class AuthService {
       //send email
 
       await lastValueFrom(
-        this.emailClient.send(
+        this.emailClient.emit(
           { cmd: 'sendTemporaryPassword' },
           { email: user.data.email, tempPassword },
         ),
@@ -286,7 +286,7 @@ export class AuthService {
 
         //send email
         await lastValueFrom(
-          this.emailClient.send(
+          this.emailClient.emit(
             { cmd: 'updateUser' },
             {
               email: user.data.email,

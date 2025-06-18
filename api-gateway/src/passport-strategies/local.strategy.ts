@@ -70,7 +70,7 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
           );
           //send email
           await lastValueFrom(
-            this.emailClient.send(
+            this.emailClient.emit(
               { cmd: 'tooManyLoginAttempts' },
               {
                 email: userEmail.data.email,

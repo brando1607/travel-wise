@@ -35,7 +35,7 @@ export class AuthService {
 
       //send email confirmation
       await lastValueFrom(
-        this.EmailClient.send(
+        this.EmailClient.emit(
           { cmd: 'welcomeEmail' },
           { email: user.email, memberNumber },
         ),
