@@ -1,12 +1,12 @@
 import { Controller } from '@nestjs/common';
-import { MessagePattern } from '@nestjs/microservices';
+import { EventPattern } from '@nestjs/microservices';
 import { AuthService } from './auth.service';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @MessagePattern({ cmd: 'welcomeEmail' })
+  @EventPattern({ cmd: 'welcomeEmail' })
   async welcomeEmail({
     email,
     memberNumber,
@@ -24,7 +24,7 @@ export class AuthController {
     }
   }
 
-  @MessagePattern({ cmd: 'sendTemporaryPassword' })
+  @EventPattern({ cmd: 'sendTemporaryPassword' })
   async sendTemporaryPassword({
     email,
     tempPassword,
@@ -42,7 +42,7 @@ export class AuthController {
     }
   }
 
-  @MessagePattern({ cmd: 'updateUser' })
+  @EventPattern({ cmd: 'updateUser' })
   async updateUser({
     email,
     updatedData,
@@ -63,7 +63,7 @@ export class AuthController {
     }
   }
 
-  @MessagePattern({ cmd: 'tooManyLoginAttempts' })
+  @EventPattern({ cmd: 'tooManyLoginAttempts' })
   async tooManyLoginAttempts({
     email,
     memberNumber,
