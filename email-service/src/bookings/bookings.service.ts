@@ -6,8 +6,9 @@ import { Booking } from './types';
 export class BookingsService {
   constructor(private readonly mail: NodemailerService) {}
 
-  async bookingCreated(booking: Booking): Promise<void> {
+  async bookingCreated(data: { booking: Booking }): Promise<void> {
     try {
+      const { booking } = data;
       const passengers = booking.passengers
         .map((p, index) => {
           const dob = p.dateOfBirth.slice(0, 10);

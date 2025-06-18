@@ -1,5 +1,5 @@
 import { Controller } from '@nestjs/common';
-import { EventPattern } from '@nestjs/microservices';
+import { EventPattern, Payload } from '@nestjs/microservices';
 import { AuthService } from './auth.service';
 
 @Controller('auth')
@@ -7,17 +7,13 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @EventPattern({ cmd: 'welcomeEmail' })
-  async welcomeEmail({
-    email,
-    memberNumber,
-  }: {
-    email: string;
-    memberNumber: number;
-  }): Promise<void> {
+  async welcomeEmail(
+    @Payload() data: { email: string; memberNumber: number },
+  ): Promise<void> {
     try {
       await this.authService.welcomeEmail({
-        email,
-        memberNumber,
+        email: data.email,
+        memberNumber: data.memberNumber,
       });
     } catch (error) {
       throw error;
@@ -25,17 +21,13 @@ export class AuthController {
   }
 
   @EventPattern({ cmd: 'sendTemporaryPassword' })
-  async sendTemporaryPassword({
-    email,
-    tempPassword,
-  }: {
-    email: string;
-    tempPassword: string;
-  }): Promise<void> {
+  async sendTemporaryPassword(
+    @Payload() data: { email: string; tempPassword: string },
+  ): Promise<void> {
     try {
       await this.authService.sendTemporaryPassword({
-        email,
-        tempPassword,
+        email: data.email,
+        tempPassword: data.tempPassword,
       });
     } catch (error) {
       throw error;
@@ -43,20 +35,19 @@ export class AuthController {
   }
 
   @EventPattern({ cmd: 'updateUser' })
-  async updateUser({
-    email,
-    updatedData,
-    memberNumber,
-  }: {
-    email: string;
-    updatedData: string;
-    memberNumber: number;
-  }): Promise<void> {
+  async updateUser(
+    @Payload()
+    data: {
+      email: string;
+      updatedData: string;
+      memberNumber: number;
+    },
+  ): Promise<void> {
     try {
       await this.authService.updateUser({
-        email,
-        updatedData,
-        memberNumber,
+        email: data.email,
+        updatedData: data.updatedData,
+        memberNumber: data.memberNumber,
       });
     } catch (error) {
       throw error;
@@ -64,18 +55,13 @@ export class AuthController {
   }
 
   @EventPattern({ cmd: 'tooManyLoginAttempts' })
-  async tooManyLoginAttempts({
-    email,
-    memberNumber,
-  }: {
-    email: string;
-    updatedData: string;
-    memberNumber: number;
-  }): Promise<void> {
+  async tooManyLoginAttempts(
+    @Payload() data: { email: string; memberNumber: number },
+  ): Promise<void> {
     try {
       await this.authService.tooManyLoginAttempts({
-        email,
-        memberNumber,
+        email: data.email,
+        memberNumber: data.memberNumber,
       });
     } catch (error) {
       throw error;
