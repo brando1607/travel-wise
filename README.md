@@ -36,6 +36,7 @@ TravelWise is composed of several services working together in a microservices a
 
 - **Email Service**  
   Handles all outgoing email notifications related to user activity. Uses Nodemailer to send automated messages triggered by a Service.
+  This service is **dockerized**, in this way several replicas can be running in the same container to improve performance.
 
   Includes:
 
