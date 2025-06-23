@@ -1,4 +1,5 @@
 export type Itinerary = {
+  date: string;
   origin: string;
   destination: string;
   cabin: 'economy' | 'premium' | 'business';

@@ -2,6 +2,7 @@ import z from 'zod';
 import parsePhoneNumberFromString from 'libphonenumber-js';
 
 const nameRegex = /^[a-zA-Z\s]+$/;
+const dateRegex = /^\d{2}-\d{2}-\d{4}$/;
 
 export const member = z.object({
   name: z
@@ -41,5 +42,11 @@ export const email = z.object({
 export const cabin = z.object({
   cabin: z.enum(['economy', 'premium', 'business'], {
     message: 'Cabin must be economy, premium or business',
+  }),
+});
+
+export const date = z.object({
+  date: z.string().regex(dateRegex, {
+    message: 'Correct format for date is DD-MM-YYYY',
   }),
 });

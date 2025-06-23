@@ -16,7 +16,9 @@ import {
   validateEmail,
   validatePhoneNumber,
   validateCabin,
+  validateDate,
 } from './schemas/functions';
+import { DateTime } from 'luxon';
 
 @Controller('bookings')
 export class BookingsController {
@@ -30,7 +32,31 @@ export class BookingsController {
       const cabin = data.cabin.toLocaleLowerCase();
       const origin = data.origin.toLocaleLowerCase();
       const destination = data.destination.toLocaleLowerCase();
+      const date = data.date;
+      const dateFormat = validateDate({ date });
+      const validDate = DateTime.fromFormat(date, 'dd-MM-yyyy');
+      const futureDate = DateTime.now().plus({ days: 350 }).startOf('day');
+      const today = DateTime.now().startOf('day');
       let fare: number;
+
+      if (!dateFormat.success) {
+        throw new HttpException(dateFormat.error.errors[0].message, 400);
+      }
+
+      if (!validDate.isValid) {
+        throw new HttpException(`${date} is not a valid date.`, 400);
+      }
+
+      if (validDate < today) {
+        throw new HttpException(`Date can't be before today`, 400);
+      }
+
+      if (validDate > futureDate) {
+        throw new HttpException(
+          `Date can't be more than 350 days in the future.`,
+          400,
+        );
+      }
 
       const checkCabin = validateCabin({ cabin });
 
@@ -48,6 +74,7 @@ export class BookingsController {
 
       const response =
         await this.bookingsService.getAvailabilityWithAirportCode({
+          date,
           origin,
           destination,
           fare,

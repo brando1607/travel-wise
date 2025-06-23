@@ -8,11 +8,13 @@ export class BookingsService {
   constructor(@Inject('BOOKINGS-SERVICE') private bookingClient: ClientProxy) {}
 
   async getAvailabilityWithAirportCode({
+    date,
     origin,
     destination,
     fare,
     cabin,
   }: {
+    date: string;
     origin: string;
     destination: string;
     fare: number;
@@ -22,7 +24,7 @@ export class BookingsService {
       const response = await lastValueFrom(
         this.bookingClient.send(
           { cmd: 'getAvailabilityWithAirportCode' },
-          { origin, destination, fare, cabin },
+          { origin, destination, fare, cabin, date },
         ),
       );
 
