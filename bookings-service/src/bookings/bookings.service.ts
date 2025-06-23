@@ -195,10 +195,8 @@ export class BookingsService {
       });
 
       let availability: Availability = {
-        outBount: {
-          date,
-          flights: [],
-        },
+        date,
+        flights: [],
       };
 
       for (let i = 0; i < 3; i++) {
@@ -212,7 +210,7 @@ export class BookingsService {
           priceIncrease = 1.25;
         }
 
-        availability.outBount.flights.push({
+        availability.flights.push({
           transportId: i,
           origin,
           destination,
@@ -259,7 +257,7 @@ export class BookingsService {
         });
       }
 
-      const availability = cachedData.outBount.flights.filter(
+      const availability = cachedData.flights.filter(
         (e) => e.transportId === id,
       );
 

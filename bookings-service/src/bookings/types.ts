@@ -9,11 +9,6 @@ export type Itinerary = {
 };
 
 export type Availability = {
-  outBount: FlightData;
-  inBound?: FlightData;
-};
-
-type FlightData = {
   date: string;
   flights: FlightInformation[];
 };
