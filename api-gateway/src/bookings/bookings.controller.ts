@@ -27,7 +27,9 @@ export class BookingsController {
     @Body() data: Itinerary,
   ): Promise<PersonalizedResponse | void> {
     try {
-      const { origin, destination, cabin } = data;
+      const cabin = data.cabin.toLocaleLowerCase();
+      const origin = data.origin.toLocaleLowerCase();
+      const destination = data.destination.toLocaleLowerCase();
       let fare: number;
 
       const checkCabin = validateCabin({ cabin });
@@ -63,7 +65,10 @@ export class BookingsController {
     @Body() data: Availability,
   ): Promise<PersonalizedResponse | void> {
     try {
-      const { id, origin, destination, cabin } = data;
+      const { id } = data;
+      const cabin = data.cabin.toLocaleLowerCase();
+      const origin = data.origin.toLocaleLowerCase();
+      const destination = data.destination.toLocaleLowerCase();
 
       const response = await this.bookingsService.saveAvailability({
         id,
@@ -155,7 +160,9 @@ export class BookingsController {
     @Param() code: string,
   ): Promise<PersonalizedResponse | void> {
     try {
-      const response = await this.bookingsService.getBooking(code);
+      const response = await this.bookingsService.getBooking(
+        code.toUpperCase(),
+      );
 
       return response;
     } catch (error) {

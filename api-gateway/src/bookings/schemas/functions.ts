@@ -1,7 +1,6 @@
 import z from 'zod';
 import { member, phone, email, cabin } from './user.schema';
 
-type Cabin = z.infer<typeof cabin>;
 type Member = z.infer<typeof member>;
 type Phone = z.infer<typeof phone>;
 type Email = z.infer<typeof email>;
@@ -31,7 +30,7 @@ export const validateEmail = (obj: Email) => {
   }
 };
 
-export const validateCabin = (obj: Cabin) => {
+export const validateCabin = (obj: { cabin: string }) => {
   try {
     return cabin.safeParse(obj);
   } catch (error) {
