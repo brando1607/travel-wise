@@ -9,11 +9,13 @@ export class BookingsController {
 
   @MessagePattern({ cmd: 'getAvailabilityWithAirportCode' })
   async getAvailabilityWithAirportCode({
+    date,
     origin,
     destination,
     fare,
     cabin,
   }: {
+    date: string;
     origin: string;
     destination: string;
     fare: number;
@@ -22,6 +24,7 @@ export class BookingsController {
     try {
       const response =
         await this.bookingsService.getAvailabilityWithAirportCode({
+          date,
           origin,
           destination,
           fare,

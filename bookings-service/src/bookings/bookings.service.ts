@@ -147,19 +147,21 @@ export class BookingsService {
   }
 
   async getAvailabilityWithAirportCode({
+    date,
     origin,
     destination,
     fare,
     cabin,
   }: {
+    date: string;
     origin: string;
     destination: string;
     fare: number;
     cabin: string;
   }): Promise<PersonalizedResponse | void> {
     try {
-      const cachedData = await this.cacheManager.get<Availability[]>(
-        `origin:${origin}/destination:${destination}/cabin:${cabin}`,
+      const cachedData = await this.cacheManager.get<Availability>(
+        `origin:${origin}/destination:${destination}/cabin:${cabin}/date:${date}`,
       );
 
       if (cachedData) {
@@ -192,7 +194,12 @@ export class BookingsService {
         timeDifference,
       });
 
-      let availability: Availability[] = [];
+      let availability: Availability = {
+        outBount: {
+          date,
+          flights: [],
+        },
+      };
 
       for (let i = 0; i < 3; i++) {
         const departure = latestDepartureTime - i;
@@ -205,7 +212,7 @@ export class BookingsService {
           priceIncrease = 1.25;
         }
 
-        availability.push({
+        availability.outBount.flights.push({
           transportId: i,
           origin,
           destination,
@@ -218,7 +225,7 @@ export class BookingsService {
       }
 
       await this.cacheManager.set(
-        `origin:${origin}/destination:${destination}/cabin:${cabin}`,
+        `origin:${origin}/destination:${destination}/cabin:${cabin}/date:${date}`,
         availability,
         300000,
       );
@@ -241,7 +248,7 @@ export class BookingsService {
     cabin: string;
   }): Promise<PersonalizedResponse | void> {
     try {
-      const cachedData = await this.cacheManager.get<Availability[]>(
+      const cachedData = await this.cacheManager.get<Availability>(
         `origin:${origin}/destination:${destination}/cabin:${cabin}`,
       );
 
@@ -252,7 +259,9 @@ export class BookingsService {
         });
       }
 
-      const availability = cachedData.filter((e) => e.transportId === id);
+      const availability = cachedData.outBount.flights.filter(
+        (e) => e.transportId === id,
+      );
 
       //save availability in cache for 5 minutes
 
