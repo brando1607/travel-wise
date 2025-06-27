@@ -5,6 +5,22 @@ export type Itinerary = {
   cabin: 'economy' | 'premium' | 'business';
 };
 
+type Outbound = Itinerary;
+type Inbound = Itinerary;
+
+export type Search = { flights: [Outbound] } | { flights: [Outbound, Inbound] };
+
+export type DataValidation = {
+  result: boolean;
+  data: {
+    date: string;
+    origin: string;
+    destination: string;
+    fare: number;
+    cabin: string;
+  };
+};
+
 export type PersonalizedResponse = {
   message?: string;
   statusCode?: number;
