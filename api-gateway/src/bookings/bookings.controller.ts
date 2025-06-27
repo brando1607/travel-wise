@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { Itinerary } from './types';
 import { BookingsService } from './bookings.service';
-import { PersonalizedResponse, Availability, Passenger } from './types';
+import { PersonalizedResponse, Availability, Passenger, Search } from './types';
 import {
   validateMembers,
   validateEmail,
@@ -19,6 +19,7 @@ import {
   validateDate,
 } from './schemas/functions';
 import { DateTime } from 'luxon';
+import { validateDateFormatAndCabin } from 'src/utils/utility.functions';
 
 @Controller('bookings')
 export class BookingsController {
@@ -26,62 +27,26 @@ export class BookingsController {
 
   @Post('getAvailabilityAC')
   async getAvailabilityWithAirportCode(
-    @Body() data: Itinerary,
+    @Body() data: Search,
   ): Promise<PersonalizedResponse | void> {
     try {
-      const cabin = data.cabin.toLocaleLowerCase();
-      const origin = data.origin.toLocaleLowerCase();
-      const destination = data.destination.toLocaleLowerCase();
-      const date = data.date;
-      const dateFormat = validateDate({ date });
-      const validDate = DateTime.fromFormat(date, 'dd-MM-yyyy');
-      const futureDate = DateTime.now().plus({ days: 350 }).startOf('day');
-      const today = DateTime.now().startOf('day');
-      let fare: number;
+      if (data.flights.length === 1) {
+        //check cabin and date format
+        const validation = validateDateFormatAndCabin(data);
 
-      if (!dateFormat.success) {
-        throw new HttpException(dateFormat.error.errors[0].message, 400);
+        if (validation.result) {
+          const response =
+            await this.bookingsService.getAvailabilityWithAirportCode({
+              date: validation.data.date,
+              origin: validation.data.origin,
+              destination: validation.data.destination,
+              fare: validation.data.fare + 0.04, //fare slighly increased for one way trips
+              cabin: validation.data.cabin,
+            });
+
+          return response;
+        }
       }
-
-      if (!validDate.isValid) {
-        throw new HttpException(`${date} is not a valid date.`, 400);
-      }
-
-      if (validDate < today) {
-        throw new HttpException(`Date can't be before today`, 400);
-      }
-
-      if (validDate > futureDate) {
-        throw new HttpException(
-          `Date can't be more than 350 days in the future.`,
-          400,
-        );
-      }
-
-      const checkCabin = validateCabin({ cabin });
-
-      if (!checkCabin.success) {
-        throw new HttpException(checkCabin.error.errors[0].message, 400);
-      }
-
-      if (cabin === 'economy') {
-        fare = 0.05;
-      } else if (cabin === 'premium') {
-        fare = 0.09;
-      } else {
-        fare = 0.14;
-      }
-
-      const response =
-        await this.bookingsService.getAvailabilityWithAirportCode({
-          date,
-          origin,
-          destination,
-          fare,
-          cabin,
-        });
-
-      return response;
     } catch (error) {
       throw error;
     }
