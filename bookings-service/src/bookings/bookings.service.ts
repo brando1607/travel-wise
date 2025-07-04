@@ -146,7 +146,7 @@ export class BookingsService {
     }
   }
 
-  async getAvailabilityWithAirportCode({
+  private async generateAvailability({
     date,
     origin,
     destination,
@@ -158,16 +158,8 @@ export class BookingsService {
     destination: string;
     fare: number;
     cabin: string;
-  }): Promise<PersonalizedResponse | void> {
+  }): Promise<Availability> {
     try {
-      const cachedData = await this.cacheManager.get<Availability>(
-        `origin:${origin}/destination:${destination}/cabin:${cabin}/date:${date}`,
-      );
-
-      if (cachedData) {
-        return { message: 'Availability', statusCode: 200, data: cachedData };
-      }
-
       let arrivalLimit = 19;
       const [originsCoordinates, destinationsCoordinates] = await Promise.all([
         this.getAirportCoordinates(origin),
@@ -221,6 +213,43 @@ export class BookingsService {
           price: `${Math.ceil(distance * fare * priceIncrease)} USD`,
         });
       }
+
+      return availability;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async getAvailabilityWithAirportCode({
+    date,
+    origin,
+    destination,
+    fare,
+    cabin,
+  }: {
+    date: string;
+    origin: string;
+    destination: string;
+    fare: number;
+    cabin: string;
+  }): Promise<PersonalizedResponse | void> {
+    try {
+      const cachedData = await this.cacheManager.get<Availability>(
+        `origin:${origin}/destination:${destination}/cabin:${cabin}/date:${date}`,
+      );
+
+      if (cachedData) {
+        return { message: 'Availability', statusCode: 200, data: cachedData };
+      }
+
+      const availability = await this.generateAvailability({
+        date,
+        origin,
+        destination,
+        fare,
+        cabin,
+      });
+      console.log(availability);
 
       await this.cacheManager.set(
         `origin:${origin}/destination:${destination}/cabin:${cabin}/date:${date}`,
