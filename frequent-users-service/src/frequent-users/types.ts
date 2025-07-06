@@ -31,7 +31,7 @@ export type NewCountry = {
 export type PersonalInfo = {
   name: string;
   lastName: string;
-  dateOfBirth: Date;
+  dateOfBirth: string;
   country: string;
 };
 

@@ -61,7 +61,7 @@ export class FrequentUsersService {
           memberNumber: e.memberNumber,
           name: e.name,
           lastName: e.lastName,
-          dateOfBirth: e.dateOfBirth,
+          dateOfBirth: e.dateOfBirth.toISOString().slice(0, 10),
           country: e.country,
         };
       });
