@@ -19,7 +19,10 @@ import {
   validateDate,
 } from './schemas/functions';
 import { DateTime } from 'luxon';
-import { validateDateFormatAndCabin } from 'src/utils/utility.functions';
+import {
+  validateDateFormatAndCabin,
+  obIsBeforeIB,
+} from 'src/utils/utility.functions';
 
 @Controller('bookings')
 export class BookingsController {
@@ -32,27 +35,70 @@ export class BookingsController {
     try {
       if (data.flights.length === 1) {
         //check cabin and date format
-        const validation = validateDateFormatAndCabin(data);
+        const validation = validateDateFormatAndCabin(data.flights[0]);
 
         if (validation.result) {
+          const response = await this.bookingsService.getAvailabilityOneWay({
+            date: validation.data.date,
+            origin: validation.data.origin,
+            destination: validation.data.destination,
+            fare: validation.data.fare + 0.04, //fare slighly increased for one way trips
+            cabin: validation.data.cabin,
+          });
+
+          return response;
+        }
+      } else if (data.flights.length === 2) {
+        const outBound = data.flights[0];
+        const inBound = data.flights[1];
+
+        if (
+          outBound.origin === inBound.origin &&
+          outBound.destination === inBound.destination
+        ) {
+          throw new HttpException(
+            'Itineraries for outboud and inbound flights must be different',
+            400,
+          );
+        }
+
+        //check cabin and date format outBound
+        const validationOB = validateDateFormatAndCabin(outBound);
+        const validationIB = validateDateFormatAndCabin(inBound);
+
+        if (validationIB && validationOB) {
+          if (!obIsBeforeIB(validationOB.data.date, validationIB.data.date)) {
+            throw new HttpException(
+              'In bound date has to be after out bound.',
+              400,
+            );
+          }
+
+          const data = {
+            flights: [outBound, inBound] as [Itinerary, Itinerary],
+            fare: {
+              outBound: validationOB.data.fare,
+              inBound: validationIB.data.fare,
+            },
+          };
+
           const response =
-            await this.bookingsService.getAvailabilityWithAirportCode({
-              date: validation.data.date,
-              origin: validation.data.origin,
-              destination: validation.data.destination,
-              fare: validation.data.fare + 0.04, //fare slighly increased for one way trips
-              cabin: validation.data.cabin,
-            });
+            await this.bookingsService.getAvailabilityRoundTrip(data);
 
           return response;
         }
       }
+
+      throw new HttpException(
+        'Search can only be for one way or round trips itineraries.',
+        400,
+      );
     } catch (error) {
       throw error;
     }
   }
 
-  @Post('saveAvailability')
+  @Post('saveAvailabilityOneWay')
   async saveAvailability(
     @Body() data: Availability,
   ): Promise<PersonalizedResponse | void> {
@@ -62,11 +108,12 @@ export class BookingsController {
       const origin = data.origin.toLocaleLowerCase();
       const destination = data.destination.toLocaleLowerCase();
 
-      const response = await this.bookingsService.saveAvailability({
+      const response = await this.bookingsService.saveAvailabilityOneWay({
         id,
         origin,
         destination,
         cabin,
+        date: data.date,
       });
 
       return response;

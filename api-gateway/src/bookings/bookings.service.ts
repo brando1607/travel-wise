@@ -1,13 +1,13 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { lastValueFrom } from 'rxjs';
-import { PersonalizedResponse, Passenger } from './types';
+import { PersonalizedResponse, Passenger, RoundTripData } from './types';
 
 @Injectable()
 export class BookingsService {
   constructor(@Inject('BOOKINGS-SERVICE') private bookingClient: ClientProxy) {}
 
-  async getAvailabilityWithAirportCode({
+  async getAvailabilityOneWay({
     date,
     origin,
     destination,
@@ -23,7 +23,7 @@ export class BookingsService {
     try {
       const response = await lastValueFrom(
         this.bookingClient.send(
-          { cmd: 'getAvailabilityWithAirportCode' },
+          { cmd: 'getAvailabilityOneWay' },
           { origin, destination, fare, cabin, date },
         ),
       );
@@ -34,22 +34,34 @@ export class BookingsService {
     }
   }
 
-  async saveAvailability({
+  async getAvailabilityRoundTrip(
+    data: RoundTripData,
+  ): Promise<PersonalizedResponse | void> {
+    const response = await lastValueFrom(
+      this.bookingClient.send({ cmd: 'getAvailabilityRoundTrip' }, data),
+    );
+
+    return response;
+  }
+
+  async saveAvailabilityOneWay({
     id,
     origin,
     destination,
     cabin,
+    date,
   }: {
     id: number;
     origin: string;
     destination: string;
     cabin: string;
+    date: string;
   }): Promise<PersonalizedResponse | void> {
     try {
       const response = await lastValueFrom(
         this.bookingClient.send(
-          { cmd: 'saveAvailability' },
-          { id, origin, destination, cabin },
+          { cmd: 'saveAvailabilityOneWay' },
+          { id, origin, destination, cabin, date },
         ),
       );
 

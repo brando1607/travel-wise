@@ -21,6 +21,11 @@ export type DataValidation = {
   };
 };
 
+export type RoundTripData = {
+  flights: [Outbound, Inbound];
+  fare: { outBound: number; inBound: number };
+};
+
 export type PersonalizedResponse = {
   message?: string;
   statusCode?: number;
