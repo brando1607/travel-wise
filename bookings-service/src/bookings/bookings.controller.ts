@@ -1,14 +1,14 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { BookingsService } from './bookings.service';
-import { PersonalizedResponse, Passenger } from './types';
+import { PersonalizedResponse, Passenger, RoundTripData } from './types';
 
 @Controller('bookings')
 export class BookingsController {
   constructor(private bookingsService: BookingsService) {}
 
-  @MessagePattern({ cmd: 'getAvailabilityWithAirportCode' })
-  async getAvailabilityWithAirportCode({
+  @MessagePattern({ cmd: 'getAvailabilityOneWay' })
+  async getAvailabilityOneWay({
     date,
     origin,
     destination,
@@ -22,14 +22,13 @@ export class BookingsController {
     cabin: string;
   }): Promise<PersonalizedResponse | void> {
     try {
-      const response =
-        await this.bookingsService.getAvailabilityWithAirportCode({
-          date,
-          origin,
-          destination,
-          fare,
-          cabin,
-        });
+      const response = await this.bookingsService.getAvailabilityOneWay({
+        date,
+        origin,
+        destination,
+        fare,
+        cabin,
+      });
 
       return response;
     } catch (error) {
@@ -37,24 +36,41 @@ export class BookingsController {
     }
   }
 
-  @MessagePattern({ cmd: 'saveAvailability' })
-  async saveAvailability({
+  @MessagePattern({ cmd: 'getAvailabilityRoundTrip' })
+  async getAvailabilityRoundTrip(
+    data: RoundTripData,
+  ): Promise<PersonalizedResponse | void> {
+    try {
+      const response =
+        await this.bookingsService.getAvailabilityRoundTrip(data);
+
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @MessagePattern({ cmd: 'saveAvailabilityOneWay' })
+  async saveAvailabilityOneWay({
     id,
     origin,
     destination,
     cabin,
+    date,
   }: {
     id: number;
     origin: string;
     destination: string;
     cabin: string;
+    date: string;
   }): Promise<PersonalizedResponse | void> {
     try {
-      const response = this.bookingsService.saveAvailability({
+      const response = this.bookingsService.saveAvailabilityOneWay({
         id,
         origin,
         destination,
         cabin,
+        date,
       });
 
       return response;

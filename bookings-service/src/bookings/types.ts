@@ -3,14 +3,28 @@ export type Coordinates = {
   location: { lat: number; lng: number };
 };
 
-export type Itinerary = {
-  origin: string;
-  destination: string;
-};
-
 export type Availability = {
   date: string;
   flights: FlightInformation[];
+};
+
+export type Itinerary = {
+  date: string;
+  origin: string;
+  destination: string;
+  cabin: 'economy' | 'premium' | 'business';
+};
+
+type Outbound = Itinerary;
+type Inbound = Itinerary;
+
+export type RoundTripData = {
+  flights: [Outbound, Inbound];
+  fare: { outBound: number; inBound: number };
+};
+
+export type AvailabilityRoundTrip = {
+  flights: { ob: Availability; ib: Availability };
 };
 
 type FlightInformation = {
@@ -21,7 +35,7 @@ type FlightInformation = {
   arrival: string;
   duration: number;
   cabin: string;
-  price: string;
+  price: number;
 };
 
 export type PersonalizedResponse = {

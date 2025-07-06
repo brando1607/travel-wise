@@ -7,6 +7,8 @@ import {
   PersonalizedResponse,
   Passenger,
   Booking,
+  RoundTripData,
+  AvailabilityRoundTrip,
 } from 'src/bookings/types';
 import tzLookup from 'tz-lookup';
 import { DateTime } from 'luxon';
@@ -195,6 +197,8 @@ export class BookingsService {
         const departure = latestDepartureTime - i;
         const arrival = arrivalLimit - i;
         let priceIncrease = 1;
+        let percentage = Math.floor(Math.random() * (15 - 5 + 1)) + 5;
+        let priceModifier = 1 + percentage / 100;
 
         if (i === 1) {
           priceIncrease = 1.15;
@@ -210,7 +214,7 @@ export class BookingsService {
           arrival: this.formatTime(arrival),
           duration: flightTime,
           cabin: cabin,
-          price: `${Math.ceil(distance * fare * priceIncrease)} USD`,
+          price: Math.ceil(distance * fare * priceIncrease * priceModifier),
         });
       }
 
@@ -220,7 +224,7 @@ export class BookingsService {
     }
   }
 
-  async getAvailabilityWithAirportCode({
+  async getAvailabilityOneWay({
     date,
     origin,
     destination,
@@ -235,7 +239,7 @@ export class BookingsService {
   }): Promise<PersonalizedResponse | void> {
     try {
       const cachedData = await this.cacheManager.get<Availability>(
-        `origin:${origin}/destination:${destination}/cabin:${cabin}/date:${date}`,
+        `oneWay/origin:${origin}/destination:${destination}/cabin:${cabin}/date:${date}`,
       );
 
       if (cachedData) {
@@ -249,10 +253,9 @@ export class BookingsService {
         fare,
         cabin,
       });
-      console.log(availability);
 
       await this.cacheManager.set(
-        `origin:${origin}/destination:${destination}/cabin:${cabin}/date:${date}`,
+        `oneWay/origin:${origin}/destination:${destination}/cabin:${cabin}/date:${date}`,
         availability,
         300000,
       );
@@ -263,20 +266,69 @@ export class BookingsService {
     }
   }
 
-  async saveAvailability({
+  async getAvailabilityRoundTrip(
+    data: RoundTripData,
+  ): Promise<PersonalizedResponse | void> {
+    try {
+      const outbound = data.flights[0];
+      const inbound = data.flights[1];
+
+      const cachedData = await this.cacheManager.get<AvailabilityRoundTrip>(
+        `roundTrip/ob/origin:${outbound.origin}/destination:${outbound.destination}/cabin:${outbound.cabin}/date:${outbound.date}/ib/origin:${inbound.origin}/destination:${inbound.destination}/cabin:${inbound.cabin}/date:${inbound.date}`,
+      );
+
+      if (cachedData) {
+        return { message: 'Availability', statusCode: 200, data: cachedData };
+      }
+
+      const availabilityOB = await this.generateAvailability({
+        date: outbound.date,
+        origin: outbound.origin,
+        destination: outbound.destination,
+        fare: data.fare.outBound,
+        cabin: outbound.cabin,
+      });
+
+      const availabilityIB = await this.generateAvailability({
+        date: inbound.date,
+        origin: inbound.origin,
+        destination: inbound.destination,
+        fare: data.fare.inBound,
+        cabin: inbound.cabin,
+      });
+
+      const availability = {
+        flights: { ob: availabilityOB, ib: availabilityIB },
+      };
+
+      await this.cacheManager.set(
+        `roundTrip/ob/origin:${outbound.origin}/destination:${outbound.destination}/cabin:${outbound.cabin}/date:${outbound.date}/ib/origin:${inbound.origin}/destination:${inbound.destination}/cabin:${inbound.cabin}/date:${inbound.date}`,
+        availability,
+        300000,
+      );
+
+      return { message: 'Availability', statusCode: 200, data: availability };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async saveAvailabilityOneWay({
     id,
     origin,
     destination,
     cabin,
+    date,
   }: {
     id: number;
     origin: string;
     destination: string;
     cabin: string;
+    date: string;
   }): Promise<PersonalizedResponse | void> {
     try {
       const cachedData = await this.cacheManager.get<Availability>(
-        `origin:${origin}/destination:${destination}/cabin:${cabin}`,
+        `oneWay/origin:${origin}/destination:${destination}/cabin:${cabin}/date:${date}`,
       );
 
       if (!cachedData) {
@@ -286,9 +338,12 @@ export class BookingsService {
         });
       }
 
-      const availability = cachedData.flights.filter(
-        (e) => e.transportId === id,
-      );
+      const flights = cachedData.flights.filter((e) => e.transportId === id);
+
+      const availability = {
+        date,
+        flights: flights,
+      };
 
       //save availability in cache for 5 minutes
 
@@ -322,9 +377,16 @@ export class BookingsService {
           });
         }
 
-        const notFrequentUsers = userData.passenger.filter(
-          (e) => !e.frequentUser,
-        );
+        const notFrequentUsers = userData.passenger
+          .filter((e) => !e.frequentUser)
+          .map((e) => {
+            return {
+              name: e.name,
+              lastName: e.lastName,
+              dateOfBirth: e.dateOfBirth,
+              country: e.country,
+            };
+          });
 
         const users = {
           passenger: [...getFrequentUsersData, ...notFrequentUsers],
@@ -356,6 +418,7 @@ export class BookingsService {
     try {
       const availability =
         await this.cacheManager.get<Availability>('savedAvailability');
+
       const passengers = await this.cacheManager.get<Passenger>(
         'passengerInformation',
       );
@@ -374,12 +437,18 @@ export class BookingsService {
         });
       }
 
+      //change price based on amount of passengers
+
+      const flight = availability.flights[0];
+
       const booking = {
-        availability,
+        date: availability.date,
+        ...flight,
+        price: flight.price * passengers.passenger.length,
         passengers,
       };
 
-      //save booking in cache
+      // save booking in cache
 
       await this.cacheManager.set('bookingOverview', booking, 300000);
 
