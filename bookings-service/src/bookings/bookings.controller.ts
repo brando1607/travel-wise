@@ -1,7 +1,12 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { BookingsService } from './bookings.service';
-import { PersonalizedResponse, Passenger, RoundTripData } from './types';
+import {
+  PersonalizedResponse,
+  Passenger,
+  RoundTripData,
+  SaveRoundTrip,
+} from './types';
 
 @Controller('bookings')
 export class BookingsController {
@@ -72,6 +77,19 @@ export class BookingsController {
         cabin,
         date,
       });
+
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @MessagePattern({ cmd: 'saveAvailabilityRoundTrip' })
+  async saveAvailabilityRoundTrip(
+    data: SaveRoundTrip,
+  ): Promise<PersonalizedResponse | void> {
+    try {
+      const response = this.bookingsService.saveAvailabilityRoundTrip(data);
 
       return response;
     } catch (error) {

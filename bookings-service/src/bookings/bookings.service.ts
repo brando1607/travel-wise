@@ -9,6 +9,8 @@ import {
   Booking,
   RoundTripData,
   AvailabilityRoundTrip,
+  SaveRoundTrip,
+  BookingOverview,
 } from 'src/bookings/types';
 import tzLookup from 'tz-lookup';
 import { DateTime } from 'luxon';
@@ -359,6 +361,50 @@ export class BookingsService {
     }
   }
 
+  async saveAvailabilityRoundTrip(
+    data: SaveRoundTrip,
+  ): Promise<PersonalizedResponse | void> {
+    try {
+      console.log(data);
+
+      const { ob, ib } = data;
+
+      const cachedData = await this.cacheManager.get<AvailabilityRoundTrip>(
+        `roundTrip/ob/origin:${ob.origin}/destination:${ob.destination}/cabin:${ob.cabin}/date:${ob.date}/ib/origin:${ib.origin}/destination:${ib.destination}/cabin:${ib.cabin}/date:${ib.date}`,
+      );
+
+      if (!cachedData) {
+        throw new RpcException({
+          statusCode: errors.notFound.availability.statusCode,
+          message: errors.notFound.availability.message,
+        });
+      }
+
+      const obFlight = cachedData.flights.ob.flights.filter(
+        (e) => e.transportId === ob.id,
+      );
+      const ibFlight = cachedData.flights.ib.flights.filter(
+        (e) => e.transportId === ob.id,
+      );
+
+      const availability = {
+        ob: obFlight,
+        ib: ibFlight,
+      };
+
+      //save availability in cache
+      await this.cacheManager.set(`savedAvailability`, availability, 300000);
+
+      return {
+        message: 'Availability saved.',
+        statusCode: 200,
+        data: availability,
+      };
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async saveUserInfo(userData: Passenger): Promise<PersonalizedResponse> {
     try {
       const frequentUsers = userData.passenger
@@ -417,7 +463,7 @@ export class BookingsService {
   async bookingOverview(): Promise<PersonalizedResponse | void> {
     try {
       const availability =
-        await this.cacheManager.get<Availability>('savedAvailability');
+        await this.cacheManager.get<BookingOverview>('savedAvailability');
 
       const passengers = await this.cacheManager.get<Passenger>(
         'passengerInformation',
@@ -439,20 +485,41 @@ export class BookingsService {
 
       //change price based on amount of passengers
 
-      const flight = availability.flights[0];
+      if (availability.oneWay) {
+        const flight = availability.flights[0];
 
-      const booking = {
-        date: availability.date,
-        ...flight,
-        price: flight.price * passengers.passenger.length,
-        passengers,
-      };
+        const booking = {
+          date: availability.date,
+          ...flight,
+          price: flight.price * passengers.passenger.length,
+          passengers,
+        };
 
-      // save booking in cache
+        // save booking in cache
 
-      await this.cacheManager.set('bookingOverview', booking, 300000);
+        await this.cacheManager.set('bookingOverview', booking, 300000);
 
-      return { message: 'Booking Overview', statusCode: 200, data: booking };
+        return { message: 'Booking Overview', statusCode: 200, data: booking };
+      } else {
+        const outboud = availability.ob;
+        const inbound = availability.ib;
+        const { price: priceOutbound, ...outboundInfo } = outboud[0];
+        const { price: priceInbound, ...inboundInfo } = inbound[0];
+        const priceRoundTrip = priceInbound + priceOutbound;
+
+        const booking = {
+          ...passengers,
+          ob: outboundInfo,
+          ib: inboundInfo,
+          priceOutbound,
+          priceInbound,
+          totalPrice: priceRoundTrip,
+        };
+
+        await this.cacheManager.set('bookingOverview', booking, 300000);
+
+        return { message: 'Booking Overview', statusCode: 200, data: booking };
+      }
     } catch (error) {
       throw error;
     }

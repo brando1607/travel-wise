@@ -8,6 +8,16 @@ export type Availability = {
   flights: FlightInformation[];
 };
 
+export type OneWay = { oneWay: true } & Availability;
+
+export type RoundTrip = {
+  oneWay: false;
+  ob: FlightInformation;
+  ib: FlightInformation;
+};
+
+export type BookingOverview = OneWay | RoundTrip;
+
 export type Itinerary = {
   date: string;
   origin: string;
@@ -15,11 +25,8 @@ export type Itinerary = {
   cabin: 'economy' | 'premium' | 'business';
 };
 
-type Outbound = Itinerary;
-type Inbound = Itinerary;
-
 export type RoundTripData = {
-  flights: [Outbound, Inbound];
+  flights: [Itinerary, Itinerary];
   fare: { outBound: number; inBound: number };
 };
 
@@ -62,4 +69,9 @@ export type Passenger = {
 export type Booking = {
   availability: Availability;
   passengers: Passenger;
+};
+
+export type SaveRoundTrip = {
+  ob: { id: number } & Itinerary;
+  ib: { id: number } & Itinerary;
 };
