@@ -1,7 +1,12 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { lastValueFrom } from 'rxjs';
-import { PersonalizedResponse, Passenger, RoundTripData } from './types';
+import {
+  PersonalizedResponse,
+  Passenger,
+  RoundTripData,
+  SaveRoundTrip,
+} from './types';
 
 @Injectable()
 export class BookingsService {
@@ -63,6 +68,20 @@ export class BookingsService {
           { cmd: 'saveAvailabilityOneWay' },
           { id, origin, destination, cabin, date },
         ),
+      );
+
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async saveAvailabilityRoundTrip(
+    data: SaveRoundTrip,
+  ): Promise<PersonalizedResponse | void> {
+    try {
+      const response = await lastValueFrom(
+        this.bookingClient.send({ cmd: 'saveAvailabilityRoundTrip' }, data),
       );
 
       return response;

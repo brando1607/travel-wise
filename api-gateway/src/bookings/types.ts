@@ -8,6 +8,11 @@ export type Itinerary = {
 type Outbound = Itinerary;
 type Inbound = Itinerary;
 
+export type SaveRoundTrip = {
+  ob: { id: number } & Outbound;
+  ib: { id: number } & Inbound;
+};
+
 export type Search = { flights: [Outbound] } | { flights: [Outbound, Inbound] };
 
 export type DataValidation = {

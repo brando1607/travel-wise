@@ -10,7 +10,13 @@ import {
 } from '@nestjs/common';
 import { Itinerary } from './types';
 import { BookingsService } from './bookings.service';
-import { PersonalizedResponse, Availability, Passenger, Search } from './types';
+import {
+  PersonalizedResponse,
+  Availability,
+  Passenger,
+  Search,
+  SaveRoundTrip,
+} from './types';
 import {
   validateMembers,
   validateEmail,
@@ -104,9 +110,9 @@ export class BookingsController {
   ): Promise<PersonalizedResponse | void> {
     try {
       const { id } = data;
-      const cabin = data.cabin.toLocaleLowerCase();
-      const origin = data.origin.toLocaleLowerCase();
-      const destination = data.destination.toLocaleLowerCase();
+      const cabin = data.cabin.toLowerCase();
+      const origin = data.origin.toLowerCase();
+      const destination = data.destination.toLowerCase();
 
       const response = await this.bookingsService.saveAvailabilityOneWay({
         id,
@@ -115,6 +121,20 @@ export class BookingsController {
         cabin,
         date: data.date,
       });
+
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @Post('saveAvailabilityRoundTrip')
+  async saveAvailabilityRoundTrip(
+    @Body() data: SaveRoundTrip,
+  ): Promise<PersonalizedResponse | void> {
+    try {
+      const response =
+        await this.bookingsService.saveAvailabilityRoundTrip(data);
 
       return response;
     } catch (error) {
