@@ -584,30 +584,18 @@ export class BookingsService {
         );
       }
 
+      let booking: any;
+
       if (bookingData.oneWay) {
-        const booking = {
+        booking = {
           passengers: bookingData.passengers.passenger,
           email: bookingData.passengers.email,
           phoneNumber: bookingData.passengers.phoneNumber,
           itinerary: bookingData.flights,
           bookingCode,
         };
-
-        // add booking to db
-        const newBooking = await this.db.bookings.create({ data: booking });
-
-        // send email with booking
-
-        await lastValueFrom(
-          this.emailClient.emit({ cmd: 'bookingCreated' }, newBooking),
-        );
-
-        return {
-          message: `Booking created under code ${bookingCode}`,
-          statusCode: 200,
-        };
       } else {
-        const booking = {
+        booking = {
           passengers: bookingData.passengers.passenger,
           email: bookingData.passengers.email,
           phoneNumber: bookingData.passengers.phoneNumber,
@@ -620,21 +608,21 @@ export class BookingsService {
           },
           bookingCode,
         };
-
-        // add booking to db
-        const newBooking = await this.db.bookings.create({ data: booking });
-
-        // send email with booking
-
-        await lastValueFrom(
-          this.emailClient.emit({ cmd: 'bookingCreatedRoundTrip' }, newBooking),
-        );
-
-        return {
-          message: `Booking created under code ${bookingCode}`,
-          statusCode: 200,
-        };
       }
+
+      // add booking to db
+      const newBooking = await this.db.bookings.create({ data: booking });
+
+      // send email with booking
+
+      await lastValueFrom(
+        this.emailClient.emit({ cmd: 'bookingCreated' }, newBooking),
+      );
+
+      return {
+        message: `Booking created under code ${bookingCode}`,
+        statusCode: 200,
+      };
     } catch (error) {
       throw error;
     }
