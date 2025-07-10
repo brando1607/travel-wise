@@ -585,8 +585,10 @@ export class BookingsService {
       }
 
       let booking: any;
+      let oneWay = false;
 
       if (bookingData.oneWay) {
+        oneWay = true;
         booking = {
           passengers: bookingData.passengers.passenger,
           email: bookingData.passengers.email,
@@ -616,7 +618,10 @@ export class BookingsService {
       // send email with booking
 
       await lastValueFrom(
-        this.emailClient.emit({ cmd: 'bookingCreated' }, newBooking),
+        this.emailClient.emit(
+          { cmd: 'bookingCreated' },
+          { newBooking, oneWay },
+        ),
       );
 
       return {
