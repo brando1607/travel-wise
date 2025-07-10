@@ -16,7 +16,27 @@ export type RoundTrip = {
   ib: FlightInformation;
 };
 
-export type BookingOverview = OneWay | RoundTrip;
+export type Flights = OneWay | RoundTrip;
+
+type OneWayBooking = {
+  oneWay: true;
+  date: string;
+  flights: FlightInformation;
+  price: number;
+  passengers: Passenger;
+};
+
+type RoundTripBooking = {
+  oneWay: false;
+  passengers: Passenger;
+  ob: FlightInformation;
+  ib: FlightInformation;
+  priceOutbound: number;
+  priceInbound: number;
+  totalPrice: number;
+};
+
+export type BookingOverview = OneWayBooking | RoundTripBooking;
 
 export type Itinerary = {
   date: string;

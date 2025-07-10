@@ -10,6 +10,7 @@ import {
   RoundTripData,
   AvailabilityRoundTrip,
   SaveRoundTrip,
+  Flights,
   BookingOverview,
 } from 'src/bookings/types';
 import tzLookup from 'tz-lookup';
@@ -462,8 +463,14 @@ export class BookingsService {
   }
   async bookingOverview(): Promise<PersonalizedResponse | void> {
     try {
+      const cachedData = await this.cacheManager.get(`bookingOverview`);
+
+      if (cachedData) {
+        return { message: 'Availability', statusCode: 200, data: cachedData };
+      }
+
       const availability =
-        await this.cacheManager.get<BookingOverview>('savedAvailability');
+        await this.cacheManager.get<Flights>('savedAvailability');
 
       const passengers = await this.cacheManager.get<Passenger>(
         'passengerInformation',
@@ -532,7 +539,7 @@ export class BookingsService {
       let newBookingCode = false;
 
       const bookingData =
-        await this.cacheManager.get<Booking>('bookingOverview');
+        await this.cacheManager.get<BookingOverview>('bookingOverview');
 
       if (!bookingData) {
         throw new RpcException({
@@ -559,16 +566,8 @@ export class BookingsService {
         }
       }
 
-      const booking = {
-        passengers: bookingData.passengers.passenger,
-        email: bookingData.passengers.email,
-        phoneNumber: bookingData.passengers.phoneNumber,
-        itinerary: bookingData.availability,
-        bookingCode,
-      };
-
       //check if there are frequent users
-      const frequentUsers = booking.passengers
+      const frequentUsers = bookingData.passengers.passenger
         .filter((e) => typeof e.memberNumber === 'number')
         .map((e) => e.memberNumber);
 
@@ -585,19 +584,57 @@ export class BookingsService {
         );
       }
 
-      // add booking to db
-      const newBooking = await this.db.bookings.create({ data: booking });
+      if (bookingData.oneWay) {
+        const booking = {
+          passengers: bookingData.passengers.passenger,
+          email: bookingData.passengers.email,
+          phoneNumber: bookingData.passengers.phoneNumber,
+          itinerary: bookingData.flights,
+          bookingCode,
+        };
 
-      // send email with booking
+        // add booking to db
+        const newBooking = await this.db.bookings.create({ data: booking });
 
-      await lastValueFrom(
-        this.emailClient.emit({ cmd: 'bookingCreated' }, newBooking),
-      );
+        // send email with booking
 
-      return {
-        message: `Booking created under code ${bookingCode}`,
-        statusCode: 200,
-      };
+        await lastValueFrom(
+          this.emailClient.emit({ cmd: 'bookingCreated' }, newBooking),
+        );
+
+        return {
+          message: `Booking created under code ${bookingCode}`,
+          statusCode: 200,
+        };
+      } else {
+        const booking = {
+          passengers: bookingData.passengers.passenger,
+          email: bookingData.passengers.email,
+          phoneNumber: bookingData.passengers.phoneNumber,
+          itinerary: {
+            outbound: bookingData.ob,
+            inbound: bookingData.ib,
+            priceInbound: bookingData.priceInbound,
+            priceOutbound: bookingData.priceOutbound,
+            totalPrice: bookingData.totalPrice,
+          },
+          bookingCode,
+        };
+
+        // add booking to db
+        const newBooking = await this.db.bookings.create({ data: booking });
+
+        // send email with booking
+
+        await lastValueFrom(
+          this.emailClient.emit({ cmd: 'bookingCreated' }, newBooking),
+        );
+
+        return {
+          message: `Booking created under code ${bookingCode}`,
+          statusCode: 200,
+        };
+      }
     } catch (error) {
       throw error;
     }
