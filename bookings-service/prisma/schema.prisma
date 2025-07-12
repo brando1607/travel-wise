@@ -22,12 +22,11 @@ enum Status {
 }
 
 model Bookings {
-  id          String   @id @default(uuid())
+  bookingCode String   @id
   passengers  Json[]
   email       String
   phoneNumber String
   itinerary   Json
-  bookingCode String
   status      Status   @default(PENDING)
   createdAt   DateTime @default(now())
 
