@@ -216,9 +216,11 @@ export class BookingsController {
 
   @Get('getBooking/:code')
   async getBooking(
-    @Param() code: string,
+    @Param() bookingCode: { code: string },
   ): Promise<PersonalizedResponse | void> {
     try {
+      const { code } = bookingCode;
+
       const response = await this.bookingsService.getBooking(
         code.toUpperCase(),
       );

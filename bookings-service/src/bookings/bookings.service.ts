@@ -132,7 +132,7 @@ export class BookingsService {
   }): number {
     try {
       const rawDeparture = arrivalLimit - flightTime - timeDifference;
-      return (rawDeparture + 24) % 24;
+      return rawDeparture;
     } catch (error) {
       throw error;
     }
@@ -179,6 +179,7 @@ export class BookingsService {
       const speed = this.calculateFlightSpeed(distance);
 
       const flightTime = Math.round((distance / speed + 0.5) * 2) / 2;
+
       const timeDifference = this.calculateTimeDifference({
         originsCoordinates,
         destinationsCoordinates,
