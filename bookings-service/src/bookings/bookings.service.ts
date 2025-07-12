@@ -6,7 +6,6 @@ import {
   Availability,
   PersonalizedResponse,
   Passenger,
-  Booking,
   RoundTripData,
   AvailabilityRoundTrip,
   SaveRoundTrip,
@@ -344,6 +343,7 @@ export class BookingsService {
       const flights = cachedData.flights.filter((e) => e.transportId === id);
 
       const availability = {
+        oneWay: true,
         date,
         flights: flights,
       };
@@ -366,8 +366,6 @@ export class BookingsService {
     data: SaveRoundTrip,
   ): Promise<PersonalizedResponse | void> {
     try {
-      console.log(data);
-
       const { ob, ib } = data;
 
       const cachedData = await this.cacheManager.get<AvailabilityRoundTrip>(
@@ -389,6 +387,7 @@ export class BookingsService {
       );
 
       const availability = {
+        oneWay: false,
         ob: obFlight,
         ib: ibFlight,
       };
@@ -496,15 +495,16 @@ export class BookingsService {
         const flight = availability.flights[0];
 
         const booking = {
+          oneWay: true,
           date: availability.date,
-          ...flight,
+          flights: { ...flight },
           price: flight.price * passengers.passenger.length,
-          passengers,
+          ...passengers,
         };
 
         // save booking in cache
 
-        await this.cacheManager.set('bookingOverview', booking, 300000);
+        await this.cacheManager.set('bookingOverview', booking, 300000000);
 
         return { message: 'Booking Overview', statusCode: 200, data: booking };
       } else {
@@ -515,6 +515,7 @@ export class BookingsService {
         const priceRoundTrip = priceInbound + priceOutbound;
 
         const booking = {
+          oneWay: false,
           ...passengers,
           ob: outboundInfo,
           ib: inboundInfo,
@@ -567,7 +568,7 @@ export class BookingsService {
       }
 
       //check if there are frequent users
-      const frequentUsers = bookingData.passengers.passenger
+      const frequentUsers = bookingData.passenger
         .filter((e) => typeof e.memberNumber === 'number')
         .map((e) => e.memberNumber);
 
@@ -589,18 +590,29 @@ export class BookingsService {
 
       if (bookingData.oneWay) {
         oneWay = true;
+        const flight = bookingData.flights;
+
         booking = {
-          passengers: bookingData.passengers.passenger,
-          email: bookingData.passengers.email,
-          phoneNumber: bookingData.passengers.phoneNumber,
-          itinerary: bookingData.flights,
+          passengers: [...bookingData.passenger],
+          email: bookingData.email,
+          phoneNumber: bookingData.phoneNumber,
+          itinerary: {
+            transportId: flight.transportId,
+            origin: flight.origin,
+            destination: flight.destination,
+            departure: flight.departure,
+            arrival: flight.arrival,
+            duration: flight.duration,
+            cabin: flight.cabin,
+            price: flight.price,
+          },
           bookingCode,
         };
       } else {
         booking = {
-          passengers: bookingData.passengers.passenger,
-          email: bookingData.passengers.email,
-          phoneNumber: bookingData.passengers.phoneNumber,
+          passengers: [...bookingData.passenger],
+          email: bookingData.email,
+          phoneNumber: bookingData.phoneNumber,
           itinerary: {
             outbound: bookingData.ob,
             inbound: bookingData.ib,
@@ -613,14 +625,14 @@ export class BookingsService {
       }
 
       // add booking to db
-      const newBooking = await this.db.bookings.create({ data: booking });
+      await this.db.bookings.create({ data: booking });
 
       // send email with booking
 
       await lastValueFrom(
         this.emailClient.emit(
           { cmd: 'bookingCreated' },
-          { newBooking, oneWay },
+          { booking: { oneWay, ...booking, status: 'PENDING' } },
         ),
       );
 

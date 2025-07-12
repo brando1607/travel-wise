@@ -1,42 +1,84 @@
 import { Injectable } from '@nestjs/common';
 import { NodemailerService } from 'src/nodemailer/nodemailer.service';
-import { Booking } from './types';
+import { PersonalInfo, BookingOverview } from './types';
 
 @Injectable()
 export class BookingsService {
   constructor(private readonly mail: NodemailerService) {}
 
-  async bookingCreated(data: { booking: Booking }): Promise<void> {
+  private getPassengers(data: PersonalInfo[]): string[] {
     try {
-      const { booking } = data;
-      const passengers = booking.passengers
-        .map((p, index) => {
-          const dob = p.dateOfBirth.slice(0, 10);
-          let memberNumber =
-            p.memberNumber === 'undefined' ? 'Not a member' : p.memberNumber;
+      return data.map((p, index) => {
+        const dob = p.dateOfBirth.slice(0, 10);
+        let memberNumber =
+          p.memberNumber === undefined ? 'Not a member' : p.memberNumber;
 
-          return `Passenger ${index + 1}:
+        return `Passenger ${index + 1}:
                   Name: ${p.name} ${p.lastName}
                   Member Number: ${memberNumber}
                   Date of Birth: ${dob}
                   Country: ${p.country}
     `;
-        })
-        .join('\n');
+      });
+    } catch (error) {
+      throw error;
+    }
+  }
 
-      const itinerary = booking.itinerary
-        .map((e) => {
-          return `
-                    Flight number: ${e.transportId}
-                    Origin ${e.origin}:
-                    Destination: ${e.destination}
-                    Departure: ${e.departure}
-                    Arrival: ${e.arrival}
-                    Flight duration: ${e.duration} hours
-                    Price: ${e.price}
+  private getItinerary(data: BookingOverview): string {
+    try {
+      if (data.oneWay) {
+        const flight = data.itinerary;
+        const itinerary = `
+                    Flight number: ${flight.transportId}
+                    Origin: ${flight.origin}
+                    Destination: ${flight.destination}
+                    Departure: ${flight.departure}
+                    Arrival: ${flight.arrival}
+                    Flight duration: ${flight.duration} hours
+                    Price: ${flight.price}
       `;
-        })
-        .join('\n');
+
+        return itinerary;
+      } else {
+        const outboud = data.itinerary.outbound;
+
+        const inboud = data.itinerary.inbound;
+
+        const itinerary = `
+                  Outbound:
+                    Flight number: ${outboud.transportId}
+                    Origin: ${outboud.origin} 
+                    Destination: ${outboud.destination}
+                    Departure: ${outboud.departure}
+                    Arrival: ${outboud.arrival}
+                    Flight duration: ${outboud.duration} hours
+                    Price: ${data.itinerary.priceOutbound}
+                  Inbound:
+                    Flight number: ${inboud.transportId}
+                    Origin: ${inboud.origin} 
+                    Destination: ${inboud.destination}
+                    Departure: ${inboud.departure}
+                    Arrival: ${inboud.arrival}
+                    Flight duration: ${inboud.duration} hours
+                    Price: ${data.itinerary.priceInbound} 
+                  Total price: ${data.itinerary.totalPrice}
+
+      `;
+
+        return itinerary;
+      }
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async bookingCreated(data: { booking: BookingOverview }): Promise<void> {
+    try {
+      const { booking } = data;
+      const passengers = this.getPassengers(booking.passengers);
+
+      const itinerary = this.getItinerary(booking);
 
       const text = `Dear passenger,
       

@@ -23,12 +23,16 @@ type OneWayBooking = {
   date: string;
   flights: FlightInformation;
   price: number;
-  passengers: Passenger;
+  passenger: PersonalInfo[];
+  email: string;
+  phoneNumber: string;
 };
 
 type RoundTripBooking = {
   oneWay: false;
-  passengers: Passenger;
+  passenger: PersonalInfo[];
+  email: string;
+  phoneNumber: string;
   ob: FlightInformation;
   ib: FlightInformation;
   priceOutbound: number;
@@ -84,11 +88,6 @@ export type Passenger = {
   passenger: PersonalInfo[];
   email: string;
   phoneNumber: string;
-};
-
-export type Booking = {
-  availability: Availability;
-  passengers: Passenger;
 };
 
 export type SaveRoundTrip = {
