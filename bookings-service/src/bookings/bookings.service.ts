@@ -192,7 +192,6 @@ export class BookingsService {
       });
 
       let availability: Availability = {
-        date,
         flights: [],
       };
 
@@ -202,6 +201,14 @@ export class BookingsService {
         let priceIncrease = 1;
         let percentage = Math.floor(Math.random() * (15 - 5 + 1)) + 5;
         let priceModifier = 1 + percentage / 100;
+        let arrivalDate = date;
+        let arrivalIsOnTheNextDay = ((departure + 24) % 24) + flightTime > 24;
+
+        if (arrivalIsOnTheNextDay) {
+          let input = DateTime.fromFormat(arrivalDate, 'dd-MM-yyyy');
+          let newArrivalDate = input.plus({ days: 1 });
+          arrivalDate = newArrivalDate.toFormat('dd-MM-yyyy');
+        }
 
         if (i === 1) {
           priceIncrease = 1.15;
@@ -213,8 +220,8 @@ export class BookingsService {
           transportId: i,
           origin,
           destination,
-          departure: this.formatTime(departure),
-          arrival: this.formatTime(arrival),
+          departure: `${date} - ${this.formatTime(departure)}`,
+          arrival: `${arrivalDate} - ${this.formatTime(arrival)}`,
           duration: flightTime,
           cabin: cabin,
           price: Math.ceil(distance * fare * priceIncrease * priceModifier),
@@ -497,7 +504,6 @@ export class BookingsService {
 
         const booking = {
           oneWay: true,
-          date: availability.date,
           flights: { ...flight },
           price: flight.price * passengers.passenger.length,
           ...passengers,
@@ -505,7 +511,7 @@ export class BookingsService {
 
         // save booking in cache
 
-        await this.cacheManager.set('bookingOverview', booking, 300000000);
+        await this.cacheManager.set('bookingOverview', booking, 300000);
 
         return { message: 'Booking Overview', statusCode: 200, data: booking };
       } else {

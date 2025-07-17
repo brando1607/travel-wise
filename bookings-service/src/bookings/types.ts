@@ -4,7 +4,6 @@ export type Coordinates = {
 };
 
 export type Availability = {
-  date: string;
   flights: FlightInformation[];
 };
 
