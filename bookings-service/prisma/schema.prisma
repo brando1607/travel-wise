@@ -44,6 +44,3 @@ model Passenger {
 
   booking Bookings @relation(fields: [bookingCode], references: [bookingCode])
 }
-
-//itinerary json will contain: 
-//origin, destination, date, cabin, transport, transportId
