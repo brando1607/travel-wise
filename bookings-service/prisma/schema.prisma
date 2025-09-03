@@ -22,15 +22,27 @@ enum Status {
 }
 
 model Bookings {
-  bookingCode String   @id
-  passengers  Json[]
+  bookingCode String      @id
+  passengers  Passenger[]
   email       String
   phoneNumber String
   itinerary   Json
-  status      Status   @default(PENDING)
-  createdAt   DateTime @default(now())
+  status      Status      @default(PENDING)
+  createdAt   DateTime    @default(now())
 
   @@map("bookings")
+}
+
+model Passenger {
+  id           Int      @id
+  bookingCode  String
+  name         String
+  lastName     String
+  country      String
+  dateOfBirth  DateTime
+  memberNumber Int
+
+  booking Bookings @relation(fields: [bookingCode], references: [bookingCode])
 }
 
 //itinerary json will contain: 
