@@ -75,8 +75,10 @@ export type PersonalizedResponse = {
 };
 
 type PersonalInfo = {
+  id: number;
+  bookingCode: string;
   frequentUser?: boolean;
-  memberNumber: number | string;
+  memberNumber: number;
   name: string;
   lastName: string;
   dateOfBirth: string;
@@ -92,4 +94,16 @@ export type Passenger = {
 export type SaveRoundTrip = {
   ob: { id: number } & Itinerary;
   ib: { id: number } & Itinerary;
+};
+
+export type UpdatePassengerData = {
+  bookingCode: string;
+  data: true;
+  userData: {
+    id: number;
+    name?: string;
+    lastName?: string;
+    dateOfBirh?: string;
+    country?: string;
+  };
 };
