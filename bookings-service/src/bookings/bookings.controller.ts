@@ -6,6 +6,7 @@ import {
   Passenger,
   RoundTripData,
   SaveRoundTrip,
+  UpdatePassengerData,
 } from './types';
 
 @Controller('bookings')
@@ -139,13 +140,34 @@ export class BookingsController {
       throw error;
     }
   }
-  @MessagePattern({ cmd: 'getBooking' })
-  async getBooking(payload: {
-    code: string;
-  }): Promise<PersonalizedResponse | void> {
+
+  @MessagePattern({ cmd: 'getPassengers' })
+  async getPassengers(): Promise<PersonalizedResponse | void> {
     try {
-      const { code } = payload;
-      const response = await this.bookingsService.getBooking(code);
+      const response = this.bookingsService.getPassengers();
+
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  }
+  @MessagePattern({ cmd: 'getBooking' })
+  async getBooking(payload: string): Promise<PersonalizedResponse | void> {
+    try {
+      const response = await this.bookingsService.getBooking(payload);
+
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @MessagePattern({ cmd: 'modifyPassengerData' })
+  async modifyPassengerData(
+    newData: UpdatePassengerData,
+  ): Promise<PersonalizedResponse | void> {
+    try {
+      const response = this.bookingsService.modifyPassengerData(newData);
 
       return response;
     } catch (error) {
