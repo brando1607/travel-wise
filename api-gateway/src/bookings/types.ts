@@ -53,3 +53,40 @@ export type Passenger = {
   email: string;
   phoneNumber: string;
 };
+
+export type UpdatePassengerData = {
+  bookingCode: string;
+  data: true;
+  userdata: {
+    name?: string;
+    lastName?: string;
+    dateOfBirh?: string;
+    country?: string;
+  };
+};
+
+export type UpdateFlights = {
+  data: false;
+  bookingCode: string;
+  bookingData: UpdateOneWay | UpdateRoundTrip;
+};
+
+type UpdateOneWay = {
+  oneWay: true;
+  data: NewFlightData;
+};
+
+type UpdateRoundTrip = {
+  oneWay: false;
+  data: {
+    outbound: NewFlightData;
+    inbound: NewFlightData;
+  };
+};
+
+type NewFlightData = {
+  origin: string;
+  destination: string;
+  date: string;
+  cabin: string;
+};
