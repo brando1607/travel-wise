@@ -8,7 +8,6 @@ import {
   Param,
   HttpException,
 } from '@nestjs/common';
-import { Itinerary } from './types';
 import { BookingsService } from './bookings.service';
 import {
   PersonalizedResponse,
@@ -16,6 +15,9 @@ import {
   Passenger,
   Search,
   SaveRoundTrip,
+  Itinerary,
+  UpdatePassengerData,
+  UpdateFlights,
 } from './types';
 import {
   validateMembers,
@@ -153,6 +155,7 @@ export class BookingsController {
         .flat();
 
       if (nonUsers.length > 0) {
+        console.log(nonUsers);
         const namesCheck = validateMembers(nonUsers);
 
         if (!namesCheck.success) {
@@ -214,6 +217,17 @@ export class BookingsController {
     }
   }
 
+  @Get('getPassengers')
+  async getPassengers(): Promise<PersonalizedResponse | void> {
+    try {
+      const response = await this.bookingsService.getPassengers();
+
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   @Get('getBooking/:code')
   async getBooking(
     @Param() bookingCode: { code: string },
@@ -224,6 +238,19 @@ export class BookingsController {
       const response = await this.bookingsService.getBooking(
         code.toUpperCase(),
       );
+
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @Patch('modifyBooking')
+  async modifyBooking(
+    @Body() newData: UpdateFlights | UpdatePassengerData,
+  ): Promise<PersonalizedResponse | void> {
+    try {
+      const response = await this.bookingsService.modifyBooking(newData);
 
       return response;
     } catch (error) {

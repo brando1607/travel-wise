@@ -6,6 +6,8 @@ import {
   Passenger,
   RoundTripData,
   SaveRoundTrip,
+  UpdateFlights,
+  UpdatePassengerData,
 } from './types';
 
 @Injectable()
@@ -139,6 +141,18 @@ export class BookingsService {
       throw error;
     }
   }
+
+  async getPassengers(): Promise<PersonalizedResponse | void> {
+    try {
+      const response = await lastValueFrom(
+        this.bookingClient.send({ cmd: 'getPassengers' }, {}),
+      );
+
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  }
   async getBooking(code: string): Promise<PersonalizedResponse | void> {
     try {
       const response = await lastValueFrom(
@@ -146,6 +160,29 @@ export class BookingsService {
       );
 
       return response;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async modifyBooking(
+    newData: UpdateFlights | UpdatePassengerData,
+  ): Promise<PersonalizedResponse | void> {
+    try {
+      if (newData.data) {
+        const response = await lastValueFrom(
+          this.bookingClient.send({ cmd: 'modifyPassengerData' }, newData),
+        );
+        return response;
+      } else if (!newData.data) {
+        const response = await lastValueFrom(
+          this.bookingClient.send({ cmd: 'modifyFlights' }, newData),
+        );
+
+        return response;
+      } else {
+        return { message: 'Data has to be true or false', statusCode: 400 };
+      }
     } catch (error) {
       throw error;
     }
