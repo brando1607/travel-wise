@@ -34,13 +34,16 @@ model Bookings {
 }
 
 model Passenger {
-  id           Int      @id
+  id           Int
   bookingCode  String
   name         String
   lastName     String
   country      String
-  dateOfBirth  DateTime
-  memberNumber Int
+  dateOfBirth  String
+  memberNumber Int?
 
   booking Bookings @relation(fields: [bookingCode], references: [bookingCode])
+
+  @@id([id, bookingCode])
+  @@map("passenger")
 }
