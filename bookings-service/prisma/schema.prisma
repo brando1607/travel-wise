@@ -19,6 +19,8 @@ enum Status {
   PENDING
   COMPLETED
   PAST
+  CANCELLED
+  REFUNDED
 }
 
 model Bookings {
@@ -42,7 +44,7 @@ model Passenger {
   dateOfBirth  String
   memberNumber Int?
 
-  booking Bookings @relation(fields: [bookingCode], references: [bookingCode])
+  booking Bookings @relation(fields: [bookingCode], references: [bookingCode], onDelete: Cascade)
 
   @@id([id, bookingCode])
   @@map("passenger")
