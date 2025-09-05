@@ -26,10 +26,10 @@ import {
   validateCabin,
   validateDate,
 } from './schemas/functions';
-import { DateTime } from 'luxon';
 import {
   validateDateFormatAndCabin,
   obIsBeforeIB,
+  dobFormatIsValid,
 } from 'src/utils/utility.functions';
 
 @Controller('bookings')
@@ -151,15 +151,26 @@ export class BookingsController {
     try {
       const nonUsers = userData.passenger
         .filter((e) => !e.frequentUser)
-        .map((e) => [{ name: e.name, lastName: e.lastName }])
+        .map((e) => [
+          { name: e.name, lastName: e.lastName, dateOfBirth: e.dateOfBirth },
+        ])
         .flat();
 
       if (nonUsers.length > 0) {
-        console.log(nonUsers);
         const namesCheck = validateMembers(nonUsers);
+        const dob = nonUsers.map((e) => e.dateOfBirth);
+
+        const dobFormat = dobFormatIsValid(dob);
 
         if (!namesCheck.success) {
           throw new HttpException(namesCheck.error.errors[0].message, 400);
+        }
+
+        if (!dobFormat) {
+          throw new HttpException(
+            'Date of birth should be in YYYY-MM-DD format for all passengers.',
+            400,
+          );
         }
       }
 
