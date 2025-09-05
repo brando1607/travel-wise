@@ -44,7 +44,7 @@ model Passenger {
   dateOfBirth  String
   memberNumber Int?
 
-  booking Bookings @relation(fields: [bookingCode], references: [bookingCode], onDelete: Cascade)
+  booking Bookings @relation(fields: [bookingCode], references: [bookingCode])
 
   @@id([id, bookingCode])
   @@map("passenger")
