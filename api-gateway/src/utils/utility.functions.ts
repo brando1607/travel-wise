@@ -64,3 +64,18 @@ export function obIsBeforeIB(ob: string, ib: string): boolean {
     throw error;
   }
 }
+
+export function dobFormatIsValid(dob: string[]): boolean {
+  try {
+    let result: boolean[] = [];
+
+    for (let i = 0; i < dob.length; i++) {
+      let check = DateTime.fromFormat(dob[i], 'yyyy-MM-dd');
+      result.push(check.isValid);
+    }
+
+    return !result.includes(false);
+  } catch (error) {
+    throw error;
+  }
+}
