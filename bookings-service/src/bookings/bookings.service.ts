@@ -11,6 +11,7 @@ import {
   SaveRoundTrip,
   Flights,
   BookingOverview,
+  UpdatePassengerData,
 } from 'src/bookings/types';
 import tzLookup from 'tz-lookup';
 import { DateTime } from 'luxon';
@@ -574,6 +575,17 @@ export class BookingsService {
         }
       }
 
+      //assign passenger number
+      const addId = bookingData.passenger.map((e, i) => {
+        return {
+          ...e,
+          id: i + 1,
+          bookingCode,
+        };
+      });
+
+      bookingData.passenger = [...addId];
+
       //check if there are frequent users
       const frequentUsers = bookingData.passenger
         .filter((e) => typeof e.memberNumber === 'number')
@@ -600,7 +612,6 @@ export class BookingsService {
         const flight = bookingData.flights;
 
         booking = {
-          passengers: [...bookingData.passenger],
           email: bookingData.email,
           phoneNumber: bookingData.phoneNumber,
           itinerary: {
@@ -617,7 +628,6 @@ export class BookingsService {
         };
       } else {
         booking = {
-          passengers: [...bookingData.passenger],
           email: bookingData.email,
           phoneNumber: bookingData.phoneNumber,
           itinerary: {
@@ -634,12 +644,30 @@ export class BookingsService {
       // add booking to db
       await this.db.bookings.create({ data: booking });
 
+      //add passengers
+      await Promise.all(
+        await this.db.$transaction(
+          bookingData.passenger.map((e) =>
+            this.db.passenger.create({ data: e }),
+          ),
+        ),
+      );
+
       // send email with booking
+
+      const data = {
+        oneWay,
+        ...booking,
+        status: 'PENDING',
+        passengers: [...bookingData.passenger],
+      };
 
       await lastValueFrom(
         this.emailClient.emit(
           { cmd: 'bookingCreated' },
-          { booking: { oneWay, ...booking, status: 'PENDING' } },
+          {
+            booking: data,
+          },
         ),
       );
 
@@ -653,7 +681,9 @@ export class BookingsService {
   }
   async getBookings(): Promise<PersonalizedResponse | void> {
     try {
-      const currentBookings = await this.db.bookings.findMany();
+      const currentBookings = await this.db.bookings.findMany({
+        include: { passengers: true },
+      });
 
       if (currentBookings.length < 1) {
         throw new RpcException({
@@ -672,12 +702,40 @@ export class BookingsService {
     }
   }
 
+  async getPassengers(): Promise<PersonalizedResponse | void> {
+    try {
+      const passengers = await this.db.passenger.findMany();
+
+      if (passengers.length < 1) {
+        throw new RpcException({
+          statusCode: errors.notFound.passengers.statusCode,
+          message: errors.notFound.passengers.message,
+        });
+      }
+
+      return {
+        message: 'Passengers retrieved',
+        statusCode: 200,
+        data: passengers,
+      };
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async getBooking(code: string): Promise<PersonalizedResponse | void> {
     try {
-      const booking = await this.db.bookings.findFirst({
-        where: { bookingCode: code },
-      });
+      if (!code) {
+        throw new RpcException({
+          statusCode: errors.notFound.bookingCode.statusCode,
+          message: errors.notFound.bookingCode.message,
+        });
+      }
 
+      const booking = await this.db.bookings.findUnique({
+        where: { bookingCode: code },
+        include: { passengers: true },
+      });
       if (!booking) {
         throw new RpcException({
           statusCode: errors.notFound.bookingCode.statusCode,
@@ -686,6 +744,57 @@ export class BookingsService {
       }
 
       return { message: 'Booking found.', statusCode: 200, data: booking };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async modifyPassengerData(
+    newData: UpdatePassengerData,
+  ): Promise<PersonalizedResponse | void> {
+    try {
+      const booking = await this.db.passenger.findMany({
+        where: { bookingCode: newData.bookingCode.toUpperCase() },
+      });
+
+      if (booking.length < 1) {
+        throw new RpcException({
+          statusCode: errors.notFound.bookingCode.statusCode,
+          message: errors.notFound.bookingCode.message,
+        });
+      }
+
+      const userToUpdate = booking.filter((e) => e.id === newData.userData.id);
+
+      if (userToUpdate.length === 0) {
+        throw new RpcException({
+          statusCode: errors.notFound.userToUpdate.statusCode,
+          message: errors.notFound.userToUpdate.message,
+        });
+      }
+
+      const user = userToUpdate[0];
+
+      if (typeof user.memberNumber === 'number') {
+        throw new RpcException({
+          statusCode: errors.badRequest.frequentUser.statusCode,
+          message: errors.badRequest.frequentUser.message,
+        });
+      }
+
+      //update user
+      const userUpdated = await this.db.passenger.update({
+        where: {
+          id_bookingCode: { id: user.id, bookingCode: user.bookingCode },
+        },
+        data: newData.userData,
+      });
+
+      return {
+        message: 'Passengers modified',
+        statusCode: 200,
+        data: userUpdated,
+      };
     } catch (error) {
       throw error;
     }
