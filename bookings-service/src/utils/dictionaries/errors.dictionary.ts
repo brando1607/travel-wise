@@ -29,4 +29,10 @@ export const errors = {
       statusCode: 404,
     },
   },
+  badRequest: {
+    frequentUser: {
+      message: 'Frequent users cannot be modified.',
+      statusCode: 400,
+    },
+  },
 };
