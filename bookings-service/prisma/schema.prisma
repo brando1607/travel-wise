@@ -23,12 +23,18 @@ enum Status {
   REFUNDED
 }
 
+enum TripType {
+  ONE_WAY
+  ROUND_TRIP
+}
+
 model Bookings {
   bookingCode String      @id
   passengers  Passenger[]
   email       String
   phoneNumber String
   itinerary   Json
+  tripType    TripType
   status      Status      @default(PENDING)
   createdAt   DateTime    @default(now())
 
