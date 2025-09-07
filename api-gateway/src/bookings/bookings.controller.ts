@@ -23,8 +23,6 @@ import {
   validateMembers,
   validateEmail,
   validatePhoneNumber,
-  validateCabin,
-  validateDate,
 } from './schemas/functions';
 import {
   validateDateFormatAndCabin,
@@ -47,11 +45,8 @@ export class BookingsController {
 
         if (validation.result) {
           const response = await this.bookingsService.getAvailabilityOneWay({
-            date: validation.data.date,
-            origin: validation.data.origin,
-            destination: validation.data.destination,
+            ...validation.data,
             fare: validation.data.fare + 0.04, //fare slighly increased for one way trips
-            cabin: validation.data.cabin,
           });
 
           return response;
@@ -70,7 +65,7 @@ export class BookingsController {
           );
         }
 
-        //check cabin and date format outBound
+        //check cabin and date format
         const validationOB = validateDateFormatAndCabin(outBound);
         const validationIB = validateDateFormatAndCabin(inBound);
 
@@ -261,9 +256,20 @@ export class BookingsController {
     @Body() newData: UpdateFlights | UpdatePassengerData,
   ): Promise<PersonalizedResponse | void> {
     try {
-      const response = await this.bookingsService.modifyBooking(newData);
+      if (newData.data) {
+        const response = await this.bookingsService.modifyBooking(newData);
 
-      return response;
+        return response;
+      } else {
+        const validation = validateDateFormatAndCabin(newData.flights[0]);
+
+        const response = await this.bookingsService.modifyBooking({
+          ...newData,
+          flights: [validation.data],
+        });
+
+        return response;
+      }
     } catch (error) {
       throw error;
     }
