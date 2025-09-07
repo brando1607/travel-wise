@@ -48,7 +48,7 @@ export function validateDateFormatAndCabin(data: Itinerary): DataValidation {
 
   return {
     result: true,
-    data: { date: date, origin, destination, fare, cabin },
+    data: { date, origin, destination, fare, cabin },
   };
 }
 
