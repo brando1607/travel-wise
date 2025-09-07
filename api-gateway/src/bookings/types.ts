@@ -1,8 +1,10 @@
 export type Itinerary = {
+  couponNumber?: number;
+  fare?: number;
   date: string;
   origin: string;
   destination: string;
-  cabin: 'economy' | 'premium' | 'business';
+  cabin: string;
 };
 
 type Outbound = Itinerary;
@@ -68,25 +70,5 @@ export type UpdatePassengerData = {
 export type UpdateFlights = {
   data: false;
   bookingCode: string;
-  bookingData: UpdateOneWay | UpdateRoundTrip;
-};
-
-type UpdateOneWay = {
-  oneWay: true;
-  data: NewFlightData;
-};
-
-type UpdateRoundTrip = {
-  oneWay: false;
-  data: {
-    outbound: NewFlightData;
-    inbound: NewFlightData;
-  };
-};
-
-type NewFlightData = {
-  origin: string;
-  destination: string;
-  date: string;
-  cabin: string;
+  flights: Itinerary[];
 };
