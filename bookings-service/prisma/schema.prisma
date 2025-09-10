@@ -28,7 +28,7 @@ model Bookings {
   passengers  Passenger[]
   email       String
   phoneNumber String
-  itinerary   Json
+  itinerary   Itinerary[]
   status      Status      @default(PENDING)
   createdAt   DateTime    @default(now())
 
@@ -48,4 +48,16 @@ model Passenger {
 
   @@id([id, bookingCode])
   @@map("passenger")
+}
+
+model Itinerary {
+  bookingCode  String   @id
+  couponNumber Int
+  date         String
+  origin       String
+  destination  String
+  cabin        String
+  booking      Bookings @relation(fields: [bookingCode], references: [bookingCode])
+
+  @@map("itinerary")
 }
