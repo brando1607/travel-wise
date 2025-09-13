@@ -42,10 +42,12 @@ type RoundTripBooking = {
 export type BookingOverview = OneWayBooking | RoundTripBooking;
 
 export type Itinerary = {
+  couponNumber?: number;
+  fare?: number;
   date: string;
   origin: string;
   destination: string;
-  cabin: 'economy' | 'premium' | 'business';
+  cabin: string;
 };
 
 export type RoundTripData = {
@@ -106,4 +108,10 @@ export type UpdatePassengerData = {
     dateOfBirh?: string;
     country?: string;
   };
+};
+
+export type UpdateFlights = {
+  data: false;
+  bookingCode: string;
+  flights: Itinerary[];
 };
