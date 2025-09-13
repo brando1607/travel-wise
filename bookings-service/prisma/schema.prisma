@@ -54,7 +54,6 @@ model Itinerary {
   bookingCode  String
   couponNumber Int
   transportId  Int
-  date         String
   origin       String
   destination  String
   cabin        String
