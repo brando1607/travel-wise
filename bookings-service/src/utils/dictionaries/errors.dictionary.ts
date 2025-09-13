@@ -28,6 +28,10 @@ export const errors = {
       message: 'No user found with that id.',
       statusCode: 404,
     },
+    coupon: {
+      message: 'Coupon not found.',
+      statusCode: 404,
+    },
   },
   badRequest: {
     frequentUser: {
