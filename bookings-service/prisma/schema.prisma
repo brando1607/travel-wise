@@ -56,6 +56,8 @@ model Itinerary {
   transportId  Int
   origin       String
   destination  String
+  departure    String
+  arrival      String
   cabin        String
   duration     Int
   price        Int
