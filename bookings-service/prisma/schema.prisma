@@ -51,13 +51,17 @@ model Passenger {
 }
 
 model Itinerary {
-  bookingCode  String   @id
+  bookingCode  String
   couponNumber Int
+  transportId  Int
   date         String
   origin       String
   destination  String
   cabin        String
+  duration     String
+  price        Int
   booking      Bookings @relation(fields: [bookingCode], references: [bookingCode])
 
+  @@id([bookingCode, origin, destination, couponNumber])
   @@map("itinerary")
 }
