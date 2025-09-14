@@ -29,6 +29,7 @@ type OneWayBooking = {
 
 type RoundTripBooking = {
   oneWay: false;
+  date: string;
   passenger: PersonalInfo[];
   email: string;
   phoneNumber: string;
