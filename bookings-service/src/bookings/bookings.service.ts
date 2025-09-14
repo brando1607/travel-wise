@@ -12,6 +12,7 @@ import {
   Flights,
   BookingOverview,
   UpdatePassengerData,
+  UpdateFlights,
 } from 'src/bookings/types';
 import tzLookup from 'tz-lookup';
 import { DateTime } from 'luxon';
@@ -471,12 +472,6 @@ export class BookingsService {
   }
   async bookingOverview(): Promise<PersonalizedResponse | void> {
     try {
-      const cachedData = await this.cacheManager.get(`bookingOverview`);
-
-      if (cachedData) {
-        return { message: 'Availability', statusCode: 200, data: cachedData };
-      }
-
       const availability =
         await this.cacheManager.get<Flights>('savedAvailability');
 
@@ -532,7 +527,11 @@ export class BookingsService {
           totalPrice: priceRoundTrip,
         };
 
-        await this.cacheManager.set('bookingOverview', booking, 300000);
+        await this.cacheManager.set(
+          'bookingOverview',
+          booking,
+          300000000000000,
+        );
 
         return { message: 'Booking Overview', statusCode: 200, data: booking };
       }
@@ -608,41 +607,99 @@ export class BookingsService {
       let oneWay = false;
 
       if (bookingData.oneWay) {
-        oneWay = true;
         const flight = bookingData.flights;
 
         booking = {
           email: bookingData.email,
           phoneNumber: bookingData.phoneNumber,
-          itinerary: {
-            transportId: flight.transportId,
-            origin: flight.origin,
-            destination: flight.destination,
-            departure: flight.departure,
-            arrival: flight.arrival,
-            duration: flight.duration,
-            cabin: flight.cabin,
-            price: flight.price,
-          },
           bookingCode,
         };
+
+        // add booking to db
+        await this.db.bookings.create({ data: booking });
+
+        //add itinerary to db
+
+        const newItinerary = {
+          couponNumber: 1,
+          bookingCode: bookingCode,
+          ...flight,
+        };
+
+        await this.db.itinerary.create({ data: newItinerary });
+
+        // send email with booking
+
+        const data = {
+          oneWay,
+          ...booking,
+          status: 'PENDING',
+          passengers: [...bookingData.passenger],
+          itinerary: flight,
+        };
+
+        await lastValueFrom(
+          this.emailClient.emit(
+            { cmd: 'bookingCreated' },
+            {
+              booking: data,
+            },
+          ),
+        );
       } else {
         booking = {
           email: bookingData.email,
           phoneNumber: bookingData.phoneNumber,
-          itinerary: {
-            outbound: bookingData.ob,
-            inbound: bookingData.ib,
-            priceInbound: bookingData.priceInbound,
-            priceOutbound: bookingData.priceOutbound,
-            totalPrice: bookingData.totalPrice,
-          },
           bookingCode,
         };
-      }
 
-      // add booking to db
-      await this.db.bookings.create({ data: booking });
+        // add booking to db
+        await this.db.bookings.create({ data: booking });
+
+        //add itinerary to db
+
+        const flights = [
+          { ...bookingData.ob, price: bookingData.priceOutbound },
+          { ...bookingData.ib, price: bookingData.priceInbound },
+        ];
+
+        await Promise.all(
+          await this.db.$transaction(
+            flights.map((e, i) =>
+              this.db.itinerary.create({
+                data: { bookingCode, couponNumber: i + 1, ...e },
+              }),
+            ),
+          ),
+        );
+
+        // send email with booking
+        const outbound = { ...flights[0] };
+        const inbound = { ...flights[1] };
+
+        const data = {
+          oneWay,
+          ...booking,
+          status: 'PENDING',
+          passengers: [...bookingData.passenger],
+          itinerary: {
+            outbound,
+            inbound,
+            priceOutbound: outbound.price,
+            priceInbound: inbound.price,
+            totalPrice: outbound.price + inbound.price,
+          },
+        };
+
+        await lastValueFrom(
+          this.emailClient.emit(
+            { cmd: 'bookingCreated' },
+            {
+              booking: data,
+            },
+          ),
+        );
+      }
 
       //add passengers
       await Promise.all(
@@ -650,24 +707,6 @@ export class BookingsService {
           bookingData.passenger.map((e) =>
             this.db.passenger.create({ data: e }),
           ),
-        ),
-      );
-
-      // send email with booking
-
-      const data = {
-        oneWay,
-        ...booking,
-        status: 'PENDING',
-        passengers: [...bookingData.passenger],
-      };
-
-      await lastValueFrom(
-        this.emailClient.emit(
-          { cmd: 'bookingCreated' },
-          {
-            booking: data,
-          },
         ),
       );
 
@@ -682,7 +721,7 @@ export class BookingsService {
   async getBookings(): Promise<PersonalizedResponse | void> {
     try {
       const currentBookings = await this.db.bookings.findMany({
-        include: { passengers: true },
+        include: { passengers: true, itinerary: true },
       });
 
       if (currentBookings.length < 1) {
@@ -795,6 +834,24 @@ export class BookingsService {
         statusCode: 200,
         data: userUpdated,
       };
+    } catch (error) {
+      throw error;
+    }
+  }
+  async modifyFlights(
+    newData: UpdateFlights,
+  ): Promise<PersonalizedResponse | void> {
+    try {
+      const booking = await this.db.bookings.findUnique({
+        where: { bookingCode: newData.bookingCode },
+      });
+
+      if (!booking) {
+        throw new RpcException({
+          statusCode: errors.notFound.bookingCode.statusCode,
+          message: errors.notFound.bookingCode.message,
+        });
+      }
     } catch (error) {
       throw error;
     }
