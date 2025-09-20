@@ -61,6 +61,7 @@ export type AvailabilityRoundTrip = {
 };
 
 type FlightInformation = {
+  couponNumber?: number;
   transportId: number;
   origin: string;
   destination: string;
@@ -115,4 +116,9 @@ export type UpdateFlights = {
   data: false;
   bookingCode: string;
   flights: Itinerary[];
+};
+
+export type ConfirmCouponChange = {
+  id: number;
+  bookingCode: string;
 };

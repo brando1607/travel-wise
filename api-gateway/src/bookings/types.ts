@@ -20,6 +20,7 @@ export type Search = { flights: [Outbound] } | { flights: [Outbound, Inbound] };
 export type DataValidation = {
   result: boolean;
   data: {
+    couponNumber?: number;
     date: string;
     origin: string;
     destination: string;
@@ -71,4 +72,9 @@ export type UpdateFlights = {
   data: false;
   bookingCode: string;
   flights: Itinerary[];
+};
+
+export type ConfirmCouponChange = {
+  coupon: number;
+  bookingCode: string;
 };
