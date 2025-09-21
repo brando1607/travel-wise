@@ -7,6 +7,8 @@ import {
   RoundTripData,
   SaveRoundTrip,
   UpdatePassengerData,
+  UpdateFlights,
+  ConfirmCouponChange,
 } from './types';
 
 @Controller('bookings')
@@ -168,6 +170,32 @@ export class BookingsController {
   ): Promise<PersonalizedResponse | void> {
     try {
       const response = this.bookingsService.modifyPassengerData(newData);
+
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @MessagePattern({ cmd: 'modifyFlights' })
+  async modifyFlights(
+    newData: UpdateFlights,
+  ): Promise<PersonalizedResponse | void> {
+    try {
+      const response = this.bookingsService.modifyFlights(newData);
+
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @MessagePattern({ cmd: 'confirmChange' })
+  async confirmChange(
+    data: ConfirmCouponChange,
+  ): Promise<PersonalizedResponse | void> {
+    try {
+      const response = await this.bookingsService.confirmChange(data);
 
       return response;
     } catch (error) {
