@@ -8,6 +8,7 @@ import {
   SaveRoundTrip,
   UpdateFlights,
   UpdatePassengerData,
+  ConfirmCouponChange,
 } from './types';
 
 @Injectable()
@@ -183,6 +184,19 @@ export class BookingsService {
       } else {
         return { message: 'Data has to be true or false', statusCode: 400 };
       }
+    } catch (error) {
+      throw error;
+    }
+  }
+  async confirmChange(
+    data: ConfirmCouponChange,
+  ): Promise<PersonalizedResponse | void> {
+    try {
+      const response = await lastValueFrom(
+        this.bookingClient.send({ cmd: 'confirmChange' }, data),
+      );
+
+      return response;
     } catch (error) {
       throw error;
     }

@@ -18,6 +18,7 @@ import {
   Itinerary,
   UpdatePassengerData,
   UpdateFlights,
+  ConfirmCouponChange,
 } from './types';
 import {
   validateMembers,
@@ -251,7 +252,7 @@ export class BookingsController {
     }
   }
 
-  @Patch('modifyBooking')
+  @Post('modifyBooking')
   async modifyBooking(
     @Body() newData: UpdateFlights | UpdatePassengerData,
   ): Promise<PersonalizedResponse | void> {
@@ -270,6 +271,18 @@ export class BookingsController {
 
         return response;
       }
+    } catch (error) {
+      throw error;
+    }
+  }
+  @Patch('confirmChange')
+  async confirmChange(
+    @Body() data: ConfirmCouponChange,
+  ): Promise<PersonalizedResponse | void> {
+    try {
+      const response = await this.bookingsService.confirmChange(data);
+
+      return response;
     } catch (error) {
       throw error;
     }
