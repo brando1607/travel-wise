@@ -13,6 +13,8 @@ import {
   BookingOverview,
   UpdatePassengerData,
   UpdateFlights,
+  Itinerary,
+  ConfirmCouponChange,
 } from 'src/bookings/types';
 import tzLookup from 'tz-lookup';
 import { DateTime } from 'luxon';
@@ -527,11 +529,7 @@ export class BookingsService {
           totalPrice: priceRoundTrip,
         };
 
-        await this.cacheManager.set(
-          'bookingOverview',
-          booking,
-          300000000000000,
-        );
+        await this.cacheManager.set('bookingOverview', booking, 300000);
 
         return { message: 'Booking Overview', statusCode: 200, data: booking };
       }
@@ -613,6 +611,7 @@ export class BookingsService {
           email: bookingData.email,
           phoneNumber: bookingData.phoneNumber,
           bookingCode,
+          price: bookingData.price,
         };
 
         // add booking to db
@@ -631,11 +630,12 @@ export class BookingsService {
         // send email with booking
 
         const data = {
-          oneWay,
+          oneWay: true,
           ...booking,
           status: 'PENDING',
           passengers: [...bookingData.passenger],
           itinerary: flight,
+          price: flight.price,
         };
 
         await lastValueFrom(
@@ -647,21 +647,25 @@ export class BookingsService {
           ),
         );
       } else {
+        const flights = [
+          { ...bookingData.ob, price: bookingData.priceOutbound },
+          { ...bookingData.ib, price: bookingData.priceInbound },
+        ];
+
+        const outbound = { ...flights[0] };
+        const inbound = { ...flights[1] };
+
         booking = {
           email: bookingData.email,
           phoneNumber: bookingData.phoneNumber,
           bookingCode,
+          price: outbound.price + inbound.price,
         };
 
         // add booking to db
         await this.db.bookings.create({ data: booking });
 
         //add itinerary to db
-
-        const flights = [
-          { ...bookingData.ob, price: bookingData.priceOutbound },
-          { ...bookingData.ib, price: bookingData.priceInbound },
-        ];
 
         await Promise.all(
           await this.db.$transaction(
@@ -674,8 +678,6 @@ export class BookingsService {
         );
 
         // send email with booking
-        const outbound = { ...flights[0] };
-        const inbound = { ...flights[1] };
 
         const data = {
           oneWay,
@@ -842,16 +844,107 @@ export class BookingsService {
     newData: UpdateFlights,
   ): Promise<PersonalizedResponse | void> {
     try {
-      const booking = await this.db.bookings.findUnique({
-        where: { bookingCode: newData.bookingCode },
+      const { date, origin, destination, fare, cabin } = newData.flights[0];
+      const couponsToModify: number[] = newData.flights.map(
+        (e) => e.couponNumber!,
+      );
+
+      const flights = await this.db.itinerary.findMany({
+        where: {
+          bookingCode: newData.bookingCode,
+          couponNumber: { in: couponsToModify },
+        },
       });
 
-      if (!booking) {
+      if (newData.flights.length < 1 || newData.flights.length > 2) {
+        throw new RpcException({
+          statusCode: errors.badRequest.numberOfFligtsToModify,
+          message: errors.badRequest.numberOfFligtsToModify,
+        });
+      }
+
+      if (flights.length === 0) {
         throw new RpcException({
           statusCode: errors.notFound.bookingCode.statusCode,
           message: errors.notFound.bookingCode.message,
         });
       }
+
+      const priceNewFlight = await this.generateAvailability({
+        date,
+        origin,
+        destination,
+        fare: fare!,
+        cabin,
+      });
+
+      await this.cacheManager.set(
+        `possibleChangeBooking:${newData.bookingCode}`,
+        priceNewFlight,
+        300000,
+      );
+
+      const currentData = {
+        couponNumber: flights[0].couponNumber,
+        bookingCode: newData.bookingCode,
+        origin: flights[0].origin,
+        destination: flights[0].destination,
+      };
+
+      await this.cacheManager.set(`flightToChange`, currentData, 300000);
+
+      return {
+        statusCode: 200,
+        message: `Choose one of these options to modify your booking ${newData.bookingCode}`,
+        data: priceNewFlight.flights,
+      };
+    } catch (error) {
+      throw error;
+    }
+  }
+  async confirmChange(
+    data: ConfirmCouponChange,
+  ): Promise<PersonalizedResponse | void> {
+    try {
+      const flightToChange = await this.cacheManager.get<{
+        couponNumber: number;
+        bookingCode: string;
+        origin: string;
+        destination: string;
+      }>(`flightToChange`);
+
+      const newItinerary = await this.cacheManager.get<Availability>(
+        `possibleChangeBooking:${data.bookingCode}`,
+      );
+
+      if (!newItinerary || !flightToChange) {
+        throw new RpcException({
+          statusCode: errors.badRequest.newItinerary.statusCode,
+          message: errors.badRequest.newItinerary.message,
+        });
+      }
+      const newCoupon = newItinerary.flights.filter(
+        (e) => e.transportId === data.id,
+      );
+
+      //change coupon in db
+      await this.db.itinerary.update({
+        where: {
+          bookingCode_origin_destination_couponNumber: {
+            bookingCode: data.bookingCode,
+            couponNumber: flightToChange.couponNumber,
+            origin: flightToChange.origin,
+            destination: flightToChange.destination,
+          },
+        },
+        data: {
+          ...newCoupon[0],
+          bookingCode: data.bookingCode,
+          couponNumber: flightToChange.couponNumber,
+        },
+      });
+
+      return { statusCode: 200, message: 'Flight Changed' };
     } catch (error) {
       throw error;
     }
