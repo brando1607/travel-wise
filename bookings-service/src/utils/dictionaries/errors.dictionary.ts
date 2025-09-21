@@ -21,7 +21,7 @@ export const errors = {
       statusCode: 404,
     },
     bookingCode: {
-      message: 'Booking not found.',
+      message: 'Booking not found or flight.',
       statusCode: 404,
     },
     userToUpdate: {
@@ -36,6 +36,14 @@ export const errors = {
   badRequest: {
     frequentUser: {
       message: 'Frequent users cannot be modified.',
+      statusCode: 400,
+    },
+    numberOfFligtsToModify: {
+      message: 'Add 1 or two flights to modify',
+      statusCode: 400,
+    },
+    newItinerary: {
+      message: 'Availability expired.',
       statusCode: 400,
     },
   },
