@@ -39,7 +39,7 @@ export const errors = {
       statusCode: 400,
     },
     numberOfFligtsToModify: {
-      message: 'Add 1 or two flights to modify',
+      message: 'You can only change one flight at a time.',
       statusCode: 400,
     },
     newItinerary: {
