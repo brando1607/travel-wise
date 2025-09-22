@@ -845,18 +845,14 @@ export class BookingsService {
   ): Promise<PersonalizedResponse | void> {
     try {
       const { date, origin, destination, fare, cabin } = newData.flights[0];
-      const couponsToModify: number[] = newData.flights.map(
-        (e) => e.couponNumber!,
-      );
 
       const flights = await this.db.itinerary.findMany({
         where: {
           bookingCode: newData.bookingCode,
-          couponNumber: { in: couponsToModify },
         },
       });
 
-      if (newData.flights.length < 1 || newData.flights.length > 2) {
+      if (newData.flights.length !== 1) {
         throw new RpcException({
           statusCode: errors.badRequest.numberOfFligtsToModify,
           message: errors.badRequest.numberOfFligtsToModify,
@@ -889,6 +885,7 @@ export class BookingsService {
         bookingCode: newData.bookingCode,
         origin: flights[0].origin,
         destination: flights[0].destination,
+        amountOfFlights: flights.length,
       };
 
       await this.cacheManager.set(`flightToChange`, currentData, 300000);
@@ -911,6 +908,7 @@ export class BookingsService {
         bookingCode: string;
         origin: string;
         destination: string;
+        amountOfFlights: number;
       }>(`flightToChange`);
 
       const newItinerary = await this.cacheManager.get<Availability>(
