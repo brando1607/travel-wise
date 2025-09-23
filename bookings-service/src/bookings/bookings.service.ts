@@ -866,6 +866,10 @@ export class BookingsService {
         });
       }
 
+      const flightToChange = flights.filter(
+        (e) => e.couponNumber === newData.flights[0].couponNumber,
+      );
+
       const priceNewFlight = await this.generateAvailability({
         date,
         origin,
@@ -881,10 +885,10 @@ export class BookingsService {
       );
 
       const currentData = {
-        couponNumber: flights[0].couponNumber,
+        couponNumber: flightToChange[0].couponNumber,
         bookingCode: newData.bookingCode,
-        origin: flights[0].origin,
-        destination: flights[0].destination,
+        origin: flightToChange[0].origin,
+        destination: flightToChange[0].destination,
         amountOfFlights: flights.length,
       };
 
@@ -924,6 +928,24 @@ export class BookingsService {
       const newCoupon = newItinerary.flights.filter(
         (e) => e.transportId === data.id,
       );
+
+      if (flightToChange.amountOfFlights === 2) {
+        //get price for the flight that's not changed
+
+        const price = await this.db.itinerary.findFirst({
+          select: { price: true },
+          where: { couponNumber: { not: flightToChange.couponNumber } },
+        });
+
+        //modify price for round trip in bookings table
+
+        const newTotalPrice = price!.price + newCoupon[0].price;
+
+        await this.db.bookings.update({
+          where: { bookingCode: data.bookingCode },
+          data: { price: newTotalPrice },
+        });
+      }
 
       //change coupon in db
       await this.db.itinerary.update({
