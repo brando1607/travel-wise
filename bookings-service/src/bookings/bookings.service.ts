@@ -876,8 +876,8 @@ export class BookingsService {
 
       //check if the itinerary for the flight that's not changed is different from the new one
       if (
-        flightNotChanged[0].origin === flightToChange[0].origin ||
-        flightNotChanged[0].destination === flightToChange[0].destination
+        flightNotChanged[0].origin === origin ||
+        flightNotChanged[0].destination === destination
       ) {
         throw new RpcException({
           message: errors.badRequest.itineraryInUse,
