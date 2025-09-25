@@ -46,5 +46,9 @@ export const errors = {
       message: 'Availability expired.',
       statusCode: 400,
     },
+    itineraryInUse: {
+      message: 'New itinerary already in this booking.',
+      statusCode: 400,
+    },
   },
 };
