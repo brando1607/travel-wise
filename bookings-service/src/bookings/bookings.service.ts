@@ -870,6 +870,21 @@ export class BookingsService {
         (e) => e.couponNumber === newData.flights[0].couponNumber,
       );
 
+      const flightNotChanged = flights.filter(
+        (e) => e.couponNumber !== newData.flights[0].couponNumber,
+      );
+
+      //check if the itinerary for the flight that's not changed is different from the new one
+      if (
+        flightNotChanged[0].origin === flightToChange[0].origin ||
+        flightNotChanged[0].destination === flightToChange[0].destination
+      ) {
+        throw new RpcException({
+          message: errors.badRequest.itineraryInUse,
+          statusCode: errors.badRequest.itineraryInUse,
+        });
+      }
+
       const priceNewFlight = await this.generateAvailability({
         date,
         origin,
@@ -932,14 +947,13 @@ export class BookingsService {
       if (flightToChange.amountOfFlights === 2) {
         //get price for the flight that's not changed
 
-        const price = await this.db.itinerary.findFirst({
-          select: { price: true },
+        const flightNotChanged = await this.db.itinerary.findFirst({
           where: { couponNumber: { not: flightToChange.couponNumber } },
         });
 
         //modify price for round trip in bookings table
 
-        const newTotalPrice = price!.price + newCoupon[0].price;
+        const newTotalPrice = flightNotChanged!.price + newCoupon[0].price;
 
         await this.db.bookings.update({
           where: { bookingCode: data.bookingCode },
