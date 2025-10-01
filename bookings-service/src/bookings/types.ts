@@ -17,7 +17,7 @@ export type RoundTrip = {
 
 export type Flights = OneWay | RoundTrip;
 
-type OneWayBooking = {
+export type OneWayBooking = {
   oneWay: true;
   date: string;
   flights: FlightInformation;
@@ -27,7 +27,7 @@ type OneWayBooking = {
   phoneNumber: string;
 };
 
-type RoundTripBooking = {
+export type RoundTripBooking = {
   oneWay: false;
   date: string;
   passenger: PersonalInfo[];
@@ -121,4 +121,21 @@ export type UpdateFlights = {
 export type ConfirmCouponChange = {
   id: number;
   bookingCode: string;
+};
+
+export type FlightData = {
+  latestDepartureTime: number;
+  date: string;
+  flightTime: number;
+  origin: string;
+  destination: string;
+  cabin: string;
+  distance: number;
+  fare: number;
+};
+
+export type DistanceAndTime = {
+  latestDepartureTime: number;
+  flightTime: number;
+  distance: number;
 };
