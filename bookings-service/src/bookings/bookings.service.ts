@@ -13,8 +13,11 @@ import {
   BookingOverview,
   UpdatePassengerData,
   UpdateFlights,
-  Itinerary,
+  FlightData,
   ConfirmCouponChange,
+  DistanceAndTime,
+  OneWayBooking,
+  RoundTripBooking,
 } from 'src/bookings/types';
 import tzLookup from 'tz-lookup';
 import { DateTime } from 'luxon';
@@ -154,46 +157,22 @@ export class BookingsService {
     }
   }
 
-  private async generateAvailability({
-    date,
-    origin,
-    destination,
-    fare,
-    cabin,
-  }: {
-    date: string;
-    origin: string;
-    destination: string;
-    fare: number;
-    cabin: string;
-  }): Promise<Availability> {
+  private generateFlightInformation(data: FlightData): Availability {
     try {
-      let arrivalLimit = 19;
-      const [originsCoordinates, destinationsCoordinates] = await Promise.all([
-        this.getAirportCoordinates(origin),
-        this.getAirportCoordinates(destination),
-      ]);
-      const distance = this.calculateFlightDistance({
-        lat1: originsCoordinates.location.lat,
-        lon1: originsCoordinates.location.lng,
-        lat2: destinationsCoordinates.location.lat,
-        lon2: destinationsCoordinates.location.lng,
-      });
-
-      const speed = this.calculateFlightSpeed(distance);
-
-      const flightTime = Math.round((distance / speed + 0.5) * 2) / 2;
-
-      const timeDifference = this.calculateTimeDifference({
-        originsCoordinates,
-        destinationsCoordinates,
-      });
-
-      const latestDepartureTime = this.getLatestDeparturetime({
-        arrivalLimit,
+      const {
+        latestDepartureTime,
+        date,
         flightTime,
-        timeDifference,
-      });
+        origin,
+        destination,
+        cabin,
+        distance,
+        fare,
+      } = data;
+      let arrivalLimit = 19;
+      let priceIncrease = 1;
+      let percentage = Math.floor(Math.random() * (15 - 5 + 1)) + 5;
+      let priceModifier = 1 + percentage / 100;
 
       let availability: Availability = {
         flights: [],
@@ -202,9 +181,6 @@ export class BookingsService {
       for (let i = 0; i < 3; i++) {
         const departure = latestDepartureTime - i;
         const arrival = arrivalLimit - i;
-        let priceIncrease = 1;
-        let percentage = Math.floor(Math.random() * (15 - 5 + 1)) + 5;
-        let priceModifier = 1 + percentage / 100;
         let arrivalDate = date;
         let arrivalIsOnTheNextDay = ((departure + 24) % 24) + flightTime > 24;
 
@@ -233,6 +209,224 @@ export class BookingsService {
       }
 
       return availability;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  private async getDistanceAndTime(
+    origin: string,
+    destination: string,
+  ): Promise<DistanceAndTime> {
+    try {
+      let arrivalLimit = 19;
+      const [originsCoordinates, destinationsCoordinates] = await Promise.all([
+        this.getAirportCoordinates(origin),
+        this.getAirportCoordinates(destination),
+      ]);
+      const distance = this.calculateFlightDistance({
+        lat1: originsCoordinates.location.lat,
+        lon1: originsCoordinates.location.lng,
+        lat2: destinationsCoordinates.location.lat,
+        lon2: destinationsCoordinates.location.lng,
+      });
+
+      const speed = this.calculateFlightSpeed(distance);
+
+      const flightTime = Math.round((distance / speed + 0.5) * 2) / 2;
+
+      const timeDifference = this.calculateTimeDifference({
+        originsCoordinates,
+        destinationsCoordinates,
+      });
+
+      const latestDepartureTime = this.getLatestDeparturetime({
+        arrivalLimit,
+        flightTime,
+        timeDifference,
+      });
+
+      return { latestDepartureTime, flightTime, distance };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  private async generateAvailability({
+    date,
+    origin,
+    destination,
+    fare,
+    cabin,
+  }: {
+    date: string;
+    origin: string;
+    destination: string;
+    fare: number;
+    cabin: string;
+  }): Promise<Availability> {
+    try {
+      const { latestDepartureTime, flightTime, distance } =
+        await this.getDistanceAndTime(origin, destination);
+
+      const data = {
+        latestDepartureTime,
+        date,
+        flightTime,
+        origin,
+        destination,
+        cabin,
+        distance,
+        fare,
+      };
+
+      const availability: Availability = this.generateFlightInformation(data);
+
+      return availability;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  private async sendEmailBookingCreated(data: BookingOverview) {
+    try {
+      await lastValueFrom(
+        this.emailClient.emit(
+          { cmd: 'bookingCreated' },
+          {
+            booking: data,
+          },
+        ),
+      );
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  private async generateBookingCode(): Promise<string> {
+    const characters = '23456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    let bookingCode = '';
+    let newBookingCode = false;
+
+    while (!newBookingCode) {
+      bookingCode = '';
+
+      for (let i = 0; i < 6; i++) {
+        const randomIndex = Math.floor(Math.random() * characters.length);
+
+        bookingCode += characters[randomIndex];
+      }
+
+      const checkBookingCode = await this.db.bookings.findFirst({
+        where: { bookingCode: bookingCode },
+      });
+
+      if (!checkBookingCode) {
+        newBookingCode = true;
+      }
+    }
+
+    return bookingCode;
+  }
+
+  private async handleDataOneWayFlight(
+    bookingData: OneWayBooking,
+    bookingCode: string,
+  ) {
+    try {
+      let booking: any;
+      const flight = bookingData.flights;
+
+      booking = {
+        email: bookingData.email,
+        phoneNumber: bookingData.phoneNumber,
+        bookingCode,
+        price: bookingData.price,
+      };
+
+      // add booking to db
+      await this.db.bookings.create({ data: booking });
+
+      //add itinerary to db
+
+      const newItinerary = {
+        couponNumber: 1,
+        bookingCode: bookingCode,
+        ...flight,
+      };
+
+      await this.db.itinerary.create({ data: newItinerary });
+
+      // send email with booking
+
+      const data = {
+        oneWay: true,
+        ...booking,
+        status: 'PENDING',
+        passengers: [...bookingData.passenger],
+        itinerary: flight,
+        price: flight.price,
+      };
+
+      await this.sendEmailBookingCreated(data);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  private async handleRoundTripFlight(
+    bookingData: RoundTripBooking,
+    bookingCode: string,
+  ) {
+    try {
+      let booking: any;
+      const flights = [
+        { ...bookingData.ob, price: bookingData.priceOutbound },
+        { ...bookingData.ib, price: bookingData.priceInbound },
+      ];
+
+      const outbound = { ...flights[0] };
+      const inbound = { ...flights[1] };
+
+      booking = {
+        email: bookingData.email,
+        phoneNumber: bookingData.phoneNumber,
+        bookingCode,
+        price: outbound.price + inbound.price,
+      };
+
+      // add booking to db
+      await this.db.bookings.create({ data: booking });
+
+      //add itinerary to db
+
+      await Promise.all(
+        await this.db.$transaction(
+          flights.map((e, i) =>
+            this.db.itinerary.create({
+              data: { bookingCode, couponNumber: i + 1, ...e },
+            }),
+          ),
+        ),
+      );
+
+      // send email with booking
+
+      const data = {
+        oneWay: false,
+        ...booking,
+        status: 'PENDING',
+        passengers: [...bookingData.passenger],
+        itinerary: {
+          outbound,
+          inbound,
+          priceOutbound: outbound.price,
+          priceInbound: inbound.price,
+          totalPrice: outbound.price + inbound.price,
+        },
+      };
+
+      await this.sendEmailBookingCreated(data);
     } catch (error) {
       throw error;
     }
@@ -472,6 +666,7 @@ export class BookingsService {
       throw error;
     }
   }
+
   async bookingOverview(): Promise<PersonalizedResponse | void> {
     try {
       const availability =
@@ -537,13 +732,9 @@ export class BookingsService {
       throw error;
     }
   }
+
   async createBooking(): Promise<PersonalizedResponse | void> {
     try {
-      //generate booking reference
-      const characters = '23456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-      let bookingCode = '';
-      let newBookingCode = false;
-
       const bookingData =
         await this.cacheManager.get<BookingOverview>('bookingOverview');
 
@@ -554,23 +745,7 @@ export class BookingsService {
         });
       }
 
-      while (!newBookingCode) {
-        bookingCode = '';
-
-        for (let i = 0; i < 6; i++) {
-          const randomIndex = Math.floor(Math.random() * characters.length);
-
-          bookingCode += characters[randomIndex];
-        }
-
-        const checkBookingCode = await this.db.bookings.findFirst({
-          where: { bookingCode: bookingCode },
-        });
-
-        if (!checkBookingCode) {
-          newBookingCode = true;
-        }
-      }
+      const bookingCode = await this.generateBookingCode();
 
       //assign passenger number
       const addId = bookingData.passenger.map((e, i) => {
@@ -601,106 +776,10 @@ export class BookingsService {
         );
       }
 
-      let booking: any;
-      let oneWay = false;
-
       if (bookingData.oneWay) {
-        const flight = bookingData.flights;
-
-        booking = {
-          email: bookingData.email,
-          phoneNumber: bookingData.phoneNumber,
-          bookingCode,
-          price: bookingData.price,
-        };
-
-        // add booking to db
-        await this.db.bookings.create({ data: booking });
-
-        //add itinerary to db
-
-        const newItinerary = {
-          couponNumber: 1,
-          bookingCode: bookingCode,
-          ...flight,
-        };
-
-        await this.db.itinerary.create({ data: newItinerary });
-
-        // send email with booking
-
-        const data = {
-          oneWay: true,
-          ...booking,
-          status: 'PENDING',
-          passengers: [...bookingData.passenger],
-          itinerary: flight,
-          price: flight.price,
-        };
-
-        await lastValueFrom(
-          this.emailClient.emit(
-            { cmd: 'bookingCreated' },
-            {
-              booking: data,
-            },
-          ),
-        );
+        await this.handleDataOneWayFlight(bookingData, bookingCode);
       } else {
-        const flights = [
-          { ...bookingData.ob, price: bookingData.priceOutbound },
-          { ...bookingData.ib, price: bookingData.priceInbound },
-        ];
-
-        const outbound = { ...flights[0] };
-        const inbound = { ...flights[1] };
-
-        booking = {
-          email: bookingData.email,
-          phoneNumber: bookingData.phoneNumber,
-          bookingCode,
-          price: outbound.price + inbound.price,
-        };
-
-        // add booking to db
-        await this.db.bookings.create({ data: booking });
-
-        //add itinerary to db
-
-        await Promise.all(
-          await this.db.$transaction(
-            flights.map((e, i) =>
-              this.db.itinerary.create({
-                data: { bookingCode, couponNumber: i + 1, ...e },
-              }),
-            ),
-          ),
-        );
-
-        // send email with booking
-
-        const data = {
-          oneWay,
-          ...booking,
-          status: 'PENDING',
-          passengers: [...bookingData.passenger],
-          itinerary: {
-            outbound,
-            inbound,
-            priceOutbound: outbound.price,
-            priceInbound: inbound.price,
-            totalPrice: outbound.price + inbound.price,
-          },
-        };
-
-        await lastValueFrom(
-          this.emailClient.emit(
-            { cmd: 'bookingCreated' },
-            {
-              booking: data,
-            },
-          ),
-        );
+        await this.handleRoundTripFlight(bookingData, bookingCode);
       }
 
       //add passengers
@@ -840,6 +919,7 @@ export class BookingsService {
       throw error;
     }
   }
+
   async modifyFlights(
     newData: UpdateFlights,
   ): Promise<PersonalizedResponse | void> {
@@ -918,6 +998,7 @@ export class BookingsService {
       throw error;
     }
   }
+
   async confirmChange(
     data: ConfirmCouponChange,
   ): Promise<PersonalizedResponse | void> {
