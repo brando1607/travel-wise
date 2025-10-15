@@ -70,22 +70,55 @@ export class BookingsService {
 
   private async getAirportCoordinates(code: string): Promise<Coordinates> {
     try {
-      const url = 'https://maps.googleapis.com/maps/api/place/textsearch/json';
+      const city = await this.db.cities.findFirst({ where: { code: code } });
 
-      const response = await firstValueFrom(
-        this.httpService.get(url, {
-          params: {
-            query: `${code} airport`,
-            key: this.googleApiKey,
+      if (!city) {
+        const url =
+          'https://maps.googleapis.com/maps/api/place/textsearch/json';
+
+        const response = await firstValueFrom(
+          this.httpService.get(url, {
+            params: {
+              query: `${code} airport`,
+              key: this.googleApiKey,
+            },
+          }),
+        );
+
+        const result = response.data.results[0];
+
+        await this.db.cities.create({
+          data: {
+            name: result.name,
+            code: code,
+            longitude: result.geometry.location.lng,
+            latitude: result.geometry.location.lat,
           },
-        }),
-      );
+        });
 
-      const result = response.data.results[0];
-      return {
-        name: result.name,
-        location: result.geometry.location,
-      };
+        return {
+          name: result.name,
+          location: result.geometry.location,
+        };
+      } else {
+        const { name, longitude, latitude, queries } = city;
+
+        //increase amount of times city has been searched
+        await this.db.cities.update({
+          where: {
+            name_code: {
+              name: name,
+              code: code,
+            },
+          },
+          data: { queries: queries + 1 },
+        });
+
+        return {
+          name,
+          location: { lat: latitude.toNumber(), lng: longitude.toNumber() },
+        };
+      }
     } catch (error) {
       throw error;
     }
