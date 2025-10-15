@@ -67,3 +67,14 @@ model Itinerary {
   @@id([bookingCode, origin, destination, couponNumber])
   @@map("itinerary")
 }
+
+model Cities {
+  name      String
+  code      String
+  longitude Decimal
+  latitude  Decimal
+  queries   Int     @default(0)
+
+  @@id([name, code])
+  @@map("cities")
+}
