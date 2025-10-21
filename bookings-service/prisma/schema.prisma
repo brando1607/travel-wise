@@ -69,11 +69,12 @@ model Itinerary {
 }
 
 model Cities {
-  name      String
-  code      String
-  longitude Decimal
-  latitude  Decimal
-  queries   Int     @default(0)
+  name               String
+  code               String
+  longitude          Decimal
+  latitude           Decimal
+  queries            Int      @default(0)
+  isConnectingFlight Boolean? @default(false)
 
   @@id([name, code])
   @@map("cities")
